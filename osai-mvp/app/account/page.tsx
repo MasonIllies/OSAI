@@ -3,13 +3,13 @@ import { useState } from "react";
 
 export default function AccountPage() {
   const [loading, setLoading] = useState(false);
-  const [authed] = useState(true); // TODO: replace with real auth check
+  const [authed] = useState(true); // TODO: replace with your real auth check
 
   const openPortal = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/stripe-portal", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to open portal");
+      if (!res.ok) throw new Error("Failed");
       const { url } = await res.json();
       window.location.href = url;
     } catch {
@@ -22,6 +22,7 @@ export default function AccountPage() {
   return (
     <section className="space-y-6">
       <h1 className="text-3xl font-bold">Account</h1>
+
       {!authed ? (
         <p className="text-white/70">Please sign in to manage your subscription.</p>
       ) : (
