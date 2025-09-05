@@ -107,7 +107,7 @@ export default function Home() {
         <div className="mb-6 text-center">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
           <p className="mt-2 text-white/75">
-            Start with <span className="font-medium">Basic Control</span>. Go <span className="font-medium">Locked In</span> when you’re ready.
+            Start with <span className="font-medium">Basic Control</span>. When you’re ready, go <span className="font-medium">Locked In.</span>
           </p>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
@@ -119,7 +119,7 @@ export default function Home() {
             href={process.env.NEXT_PUBLIC_STRIPE_BASIC_URL}
           />
           <Price
-            name="Locked In"
+            name="Locked In."
             price="$14.99"
             note="All modules + priority updates"
             features={["All current & future modules", "Priority improvements", "Beta features early"]}
