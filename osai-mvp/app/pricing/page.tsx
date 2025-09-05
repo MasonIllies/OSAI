@@ -50,7 +50,7 @@ export default function PricingPage() {
           checkoutUrl={STRIPE_BASIC}
         />
         <PlanCard
-          name="Locked In"
+          name="Locked In."
           price="$14.99"
           features={FEATURES_LOCKED}
           checkoutUrl={STRIPE_LOCKED}
