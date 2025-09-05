@@ -1,45 +1,46 @@
-// app/layout.tsx
+import type { Metadata } from "next";
 import "./globals.css";
+import Link from "next/link";
 
-export const metadata = {
-  title: "OSAI",
-  description: "Your personal OS assistant",
+export const metadata: Metadata = {
+  title: "OSAI — Your personal OS assistant",
+  description: "Always-on AI control for your life and work.",
+  openGraph: {
+    title: "OSAI",
+    description: "Always-on AI control for your life and work.",
+    url: "https://osai.llc",
+    siteName: "OSAI",
+    type: "website"
+  },
+  twitter: { card: "summary_large_image", title: "OSAI", description: "Always-on AI control." }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-screen text-white antialiased
-        bg-[radial-gradient(1000px_700px_at_70%_-10%,rgba(255,255,255,0.18),transparent),radial-gradient(800px_500px_at_-10%_30%,rgba(255,255,255,0.10),transparent)]
-        bg-black">
-        {/* NAV */}
-        <header className="sticky top-0 z-40 backdrop-blur-md bg-black/30 border-b border-white/10">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-6 rounded-full bg-white/90 shadow ring-1 ring-black/10" />
-              <span className="font-semibold tracking-tight">OSAI</span>
-              <span className="hidden md:inline text-white/50">— your personal OS</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <a href="/pricing" className="text-sm text-white/80 hover:text-white">Pricing</a>
-              <a href="/account" className="text-sm text-white/80 hover:text-white">Account</a>
-            </div>
-          </nav>
+      <body className="min-h-screen bg-black text-white antialiased">
+        {/* HEADER */}
+        <header className="w-full border-b border-white/10">
+          <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+            <Link href="/" className="text-xl font-semibold tracking-tight">OSAI</Link>
+            <nav className="flex items-center gap-6">
+              <Link href="/pricing" className="px-2 py-1 rounded-md hover:opacity-80 focus:outline-none focus:ring">Pricing</Link>
+              <Link href="/account" className="px-2 py-1 rounded-md hover:opacity-80 focus:outline-none focus:ring">Account</Link>
+            </nav>
+          </div>
         </header>
 
-        {/* PAGE */}
-        <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-          {children}
-        </main>
+        {/* PAGE CONTENT */}
+        <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
 
-        {/* FOOTER */}
-        <footer className="border-t border-white/10">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 text-sm flex items-center justify-between text-white/70">
-            <div>© {new Date().getFullYear()} OSAI</div>
-            <div className="flex items-center gap-4">
-              <a className="hover:text-white" href="/legal/terms">Terms</a>
-              <a className="hover:text-white" href="/legal/privacy">Privacy</a>
-            </div>
+        {/* FOOTER (rendered ONCE here) */}
+        <footer className="w-full border-t border-white/10 mt-16">
+          <div className="mx-auto max-w-6xl px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm opacity-80">
+            <p>© {new Date().getFullYear()} OSAI LLC. All rights reserved.</p>
+            <nav className="flex items-center gap-6">
+              <Link href="/terms" className="hover:underline focus:outline-none focus:ring">Terms</Link>
+              <Link href="/privacy" className="hover:underline focus:outline-none focus:ring">Privacy</Link>
+            </nav>
           </div>
         </footer>
       </body>
