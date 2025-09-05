@@ -24,32 +24,50 @@ const Row = ({ icon: Icon, title, desc }: { icon: any; title: string; desc: stri
   </div>
 );
 
-const Price = ({
-  name, price, note, features, href, popular = false,
-}: { name: string; price: string; note?: string; features: string[]; href?: string; popular?: boolean; }) => (
-  <FrostCard className={`p-6 md:p-8 transition-transform ${popular ? "ring-1 ring-white/40 scale-[1.01]" : "hover:scale-[1.01]"}`}>
-    {popular && <div className="mb-4"><Pill>Recommended</Pill></div>}
-    <div className="flex items-baseline justify-between">
-      <h3 className="text-xl font-semibold">{name}</h3>
-      <div className="text-3xl font-bold tracking-tight">{price}<span className="text-base font-medium text-white/70">/mo</span></div>
-    </div>
-    {note && <p className="mt-1 text-sm text-white/70">{note}</p>}
-    <ul className="mt-6 space-y-3">
-      {features.map((f, i) => (
-        <li key={i} className="flex items-start gap-3 text-sm">
-          <Check className="mt-0.5 size-4" aria-hidden />
-          <span>{f}</span>
-        </li>
-      ))}
-    </ul>
+type PriceProps = {
+  name: string;
+  price: string; // e.g. "$9.99"
+  note?: string;
+  features: string[];
+  href?: string; // Stripe link or internal route
+  popular?: boolean;
+};
+
+const Price = ({ name, price, note, features, href, popular = false }: PriceProps) => {
+  const external = !!href && /^https?:\/\//i.test(href);
+  const Button = (
     <a
       href={href || "/pricing"}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold shadow-inner transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
     >
-      Continue <ArrowRight className="size-4" aria-hidden />
+      Subscribe — {name} ({price}/mo) <ArrowRight className="size-4" aria-hidden />
     </a>
-  </FrostCard>
-);
+  );
+
+  return (
+    <FrostCard className={`p-6 md:p-8 transition-transform ${popular ? "ring-1 ring-white/40 scale-[1.01]" : "hover:scale-[1.01]"}`}>
+      {popular && <div className="mb-4"><Pill>Recommended</Pill></div>}
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-xl font-semibold">{name}</h3>
+        <div className="text-3xl font-bold tracking-tight">
+          {price}
+          <span className="text-base font-medium text-white/70">/mo</span>
+        </div>
+      </div>
+      {note && <p className="mt-1 text-sm text-white/70">{note}</p>}
+      <ul className="mt-6 space-y-3">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-3 text-sm">
+            <Check className="mt-0.5 size-4" aria-hidden />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      {Button}
+    </FrostCard>
+  );
+};
 
 export default function Home() {
   return (
@@ -62,7 +80,7 @@ export default function Home() {
             <span className="font-semibold tracking-tight">OSAI</span>
             <span className="hidden md:inline text-white/50">— your personal OS</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <a href="#pricing" className="hidden md:inline text-sm text-white/80 hover:text-white">Pricing</a>
             <a href="#account" className="hidden md:inline text-sm text-white/80 hover:text-white">Account</a>
             <a href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold shadow-inner hover:bg-white/20">
@@ -112,7 +130,9 @@ export default function Home() {
       <section id="pricing" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-14 md:pt-20">
         <div className="mb-6 text-center">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
-          <p className="mt-2 text-white/75">Start with <span className="font-medium">Basic Control</span>. Go <span className="font-medium">Locked In.</span> when you’re ready.</p>
+          <p className="mt-2 text-white/75">
+            Start with <span className="font-medium">Basic Control</span>. Go <span className="font-medium">Locked In</span> when you’re ready.
+          </p>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
           <Price
@@ -123,7 +143,7 @@ export default function Home() {
             href="https://buy.stripe.com/6oU00kbPvh03eUbb3U7g402" // replace with your Stripe Payment Link
           />
           <Price
-            name="Locked In."
+            name="Locked In"
             price="$14.99"
             note="All modules + priority updates"
             features={["All current & future modules", "Priority improvements", "Beta features early"]}
@@ -150,7 +170,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 text-sm flex flex-col md:flex-row items-center justify-between gap-4 text.white/70">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 text-sm flex flex-col md:flex-row items-center justify-between gap-4 text-white/70">
           <div>© {new Date().getFullYear()} OSAI. All rights reserved.</div>
           <div className="flex items-center gap-4">
             <a className="hover:text-white" href="/legal/terms">Terms</a>
