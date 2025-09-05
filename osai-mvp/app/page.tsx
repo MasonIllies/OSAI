@@ -65,7 +65,7 @@ const Price = ({ name, price, note, features, href, popular = false }: PriceProp
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(1000px_700px_at_70%_-10%,rgba(255,255,255,0.18),transparent),radial-gradient(800px_500px_at_-10%_30%,rgba(255,255,255,0.10),transparent)] text-white antialiased">
+    <div className="min-h-screen">
       {/* HERO */}
       <section className="pt-12 md:pt-20 text-center">
         <div className="flex flex-col items-center">
@@ -97,12 +97,12 @@ export default function Home() {
             <Row icon={Shield} title="Private by default" desc="Minimal data stored. RLS policies so only you touch your rows." />
           </FrostCard>
           <FrostCard className="p-6 md:p-7">
-            <Row icon={CreditCard} title="Easy billing" desc="Stripe-hosted checkout and Customer Portal. Cancel anytime." />
+            <Row icon={CreditCard} title="Billing that’s painless" desc="Stripe Checkout and Customer Portal. Cancel anytime." />
           </FrostCard>
         </div>
       </section>
 
-      {/* HOMEPAGE PRICING PREVIEW */}
+      {/* PRICING PREVIEW */}
       <section className="pt-14 md:pt-20">
         <div className="mb-6 text-center">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
