@@ -23,14 +23,7 @@ const Row = ({ icon: Icon, title, desc }: { icon: any; title: string; desc: stri
   </div>
 );
 
-type PriceProps = {
-  name: string;
-  price: string; // "$9.99"
-  note?: string;
-  features: string[];
-  href?: string; // Stripe link or /pricing
-  popular?: boolean;
-};
+type PriceProps = { name: string; price: string; note?: string; features: string[]; href?: string; popular?: boolean; };
 
 const Price = ({ name, price, note, features, href, popular = false }: PriceProps) => {
   const external = !!href && /^https?:\/\//i.test(href);
@@ -65,18 +58,14 @@ const Price = ({ name, price, note, features, href, popular = false }: PriceProp
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="space-y-16 md:space-y-20">
       {/* HERO */}
-      <section className="pt-12 md:pt-20 text-center">
-        <div className="flex flex-col items-center">
-          <div className="mb-4"><Pill>Trainable • Private • Always on</Pill></div>
-          <h1 className="text-4xl md:text-6xl font-semibold leading-[1.05] tracking-tight">
-            Your personal OS assistant
-          </h1>
-          <p className="mt-4 max-w-2xl text-base md:text-lg text-white/80">
-            Structure beats motivation. OSAI gives you modules, checklists, and a coach that outputs clean JSON into a simple UI — no chaos.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+      <section className="text-center md:text-left">
+        <div className="max-w-3xl mx-auto md:mx-0">
+          <div className="mb-4 inline-block"><Pill>Trainable • Private • Always on</Pill></div>
+          <h1 className="text-4xl md:text-6xl font-semibold leading-[1.05] tracking-tight">Your personal OS assistant</h1>
+          <p className="mt-4 text-white/80">Structure beats motivation. OSAI gives you modules, checklists, and a coach that outputs clean JSON into a simple UI — no chaos.</p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 md:justify-start justify-center">
             <a href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold shadow-inner hover:bg-white/20">
               See plans <ArrowRight className="size-4" aria-hidden />
             </a>
@@ -88,27 +77,19 @@ export default function Home() {
       </section>
 
       {/* BENEFITS */}
-      <section id="benefits" className="pt-14 md:pt-20">
+      <section id="benefits">
         <div className="grid md:grid-cols-3 gap-5">
-          <FrostCard className="p-6 md:p-7">
-            <Row icon={Zap} title="Fast to live" desc="Next.js + Supabase + Stripe. Create account, pay, use. No fluff." />
-          </FrostCard>
-          <FrostCard className="p-6 md:p-7">
-            <Row icon={Shield} title="Private by default" desc="Minimal data stored. RLS policies so only you touch your rows." />
-          </FrostCard>
-          <FrostCard className="p-6 md:p-7">
-            <Row icon={CreditCard} title="Billing that’s painless" desc="Stripe Checkout and Customer Portal. Cancel anytime." />
-          </FrostCard>
+          <FrostCard className="p-6 md:p-7"><Row icon={Zap} title="Fast to live" desc="Next.js + Supabase + Stripe. Create account, pay, use. No fluff." /></FrostCard>
+          <FrostCard className="p-6 md:p-7"><Row icon={Shield} title="Private by default" desc="Minimal data stored. RLS policies so only you touch your rows." /></FrostCard>
+          <FrostCard className="p-6 md:p-7"><Row icon={CreditCard} title="Billing that’s painless" desc="Stripe Checkout + Customer Portal. Cancel anytime." /></FrostCard>
         </div>
       </section>
 
       {/* PRICING PREVIEW */}
-      <section className="pt-14 md:pt-20">
-        <div className="mb-6 text-center">
+      <section>
+        <div className="text-center mb-6">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
-          <p className="mt-2 text-white/75">
-            Start with <span className="font-medium">Basic Control</span>. When you’re ready, go <span className="font-medium">Locked In.</span>
-          </p>
+          <p className="mt-2 text-white/75">Start with <span className="font-medium">Basic Control</span>. When you’re ready, go <span className="font-medium">Locked In.</span></p>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
           <Price
@@ -130,7 +111,7 @@ export default function Home() {
       </section>
 
       {/* ACCOUNT CTA */}
-      <section className="pt-14 md:pt-20 pb-4">
+      <section>
         <FrostCard className="p-6 md:p-10">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
             <div className="grow">
@@ -146,3 +127,4 @@ export default function Home() {
     </div>
   );
 }
+
