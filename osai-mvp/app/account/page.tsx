@@ -26,12 +26,10 @@ export default function AccountPage() {
         <p className="text-white/70">Please sign in to manage your subscription.</p>
       ) : (
         <div className="flex gap-4 items-center">
-          <button onClick={openPortal} disabled={loading} className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-base font-semibold border border-white/15 shadow-sm hover:opacity-90 focus:outline-none focus:ring disabled:opacity-50">
+          <button onClick={openPortal} disabled={loading} className="btn disabled:opacity-50">
             {loading ? "Opening…" : "Open Billing Portal"}
           </button>
-          <a href="/pricing" className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-base font-semibold border border-white/15 shadow-sm hover:opacity-90 focus:outline-none focus:ring">
-            Change Plan
-          </a>
+          <a href="/pricing" className="btn-ghost">Change Plan</a>
         </div>
       )}
     </section>
