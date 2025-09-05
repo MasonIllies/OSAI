@@ -1,14 +1,18 @@
-export default function Pricing(){
+export default function Pricing() {
   return (
-    <main className="mx-auto max-w-xl p-8">
-      <h1 className="text-2xl font-semibold mb-6">Choose your plan</h1>
-      <div className="space-y-4">
-        <a className="block rounded-lg border p-4 text-center hover:bg-gray-50"
-           href="https://buy.stripe.com/6oU00kbPvh03eUbb3U7g402" target="_blank" rel="noreferrer">
+    <main className="mx-auto max-w-3xl p-10 text-white">
+      <h1 className="text-3xl font-bold mb-4">Choose your plan</h1>
+      <div className="grid gap-4">
+        <a
+          className="rounded border border-white/20 px-4 py-3 inline-block"
+          href="https://buy.stripe.com/YOUR_BASIC_CONTROL_LIVE_LINK"  // replace with your live Payment Link
+        >
           Basic Control — $9.99/mo
         </a>
-        <a className="block rounded-lg border p-4 text-center hover:bg-gray-50"
-           href="https://buy.stripe.com/9B63cwdXDbFJ7rJeg67g403" target="_blank" rel="noreferrer">
+        <a
+          className="rounded border border-white/20 px-4 py-3 inline-block"
+          href="https://buy.stripe.com/YOUR_LOCKED_IN_LIVE_LINK"      // replace with your live Payment Link
+        >
           Locked In. — $14.99/mo
         </a>
       </div>
