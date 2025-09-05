@@ -18,12 +18,12 @@ function PlanCard({ name, price, features, checkoutUrl }:{
   name:string; price:string; features:string[]; checkoutUrl:string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/15 p-6 shadow-sm">
+    <div className="card p-6 md:p-8">
       <h2 className="text-2xl font-semibold">{name}</h2>
       <p className="mt-1 text-white/70">{price}/mo</p>
       <ul className="mt-4 list-disc pl-5 space-y-1">{features.map(f => <li key={f}>{f}</li>)}</ul>
       <div className="mt-6">
-        <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-base font-semibold border border-white/15 shadow-sm hover:opacity-90 focus:outline-none focus:ring">
+        <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="btn">
           Subscribe — {name} ({price}/mo)
         </a>
       </div>
