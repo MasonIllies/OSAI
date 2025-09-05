@@ -1,22 +1,20 @@
-export default function Privacy(){
+export default function Privacy() {
   return (
-    <main className="prose mx-auto max-w-3xl p-10">
-      <h1>OSAI Privacy Policy</h1>
-      <p><em>Last updated: 2025-09-04</em></p>
-      <p>OSAI is owned and operated by Mason Illies d/b/a OSAI.</p>
-      <h2>Data We Collect</h2>
+    <section className="prose prose-invert max-w-none">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+      <h2>Data We Process</h2>
       <ul>
-        <li>Account: email, auth IDs, subscription status</li>
-        <li>Payments via Stripe (no card storage)</li>
-        <li>Usage & logs; prompts & outputs</li>
+        <li>Account & billing details</li>
+        <li>Content you provide to the assistant</li>
+        <li>Basic analytics (error logs, performance)</li>
       </ul>
-      <h2>Use</h2>
-      <ul>
-        <li>Provide and secure the Service</li>
-        <li>Process payments</li>
-        <li>Improve features</li>
-      </ul>
-      <p>Contact: privacy@osai.llc</p>
-    </main>
+      <h2>What We Don’t Sell</h2>
+      <p>We do not sell personal data. Access is restricted and role-scoped.</p>
+      <h2>Retention</h2>
+      <p>We retain minimal data for as long as needed to provide the service or comply with law.</p>
+      <h2>Your Rights</h2>
+      <p>Access, correction, deletion. Contact: privacy@osai.llc</p>
+    </section>
   );
 }
