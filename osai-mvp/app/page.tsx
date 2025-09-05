@@ -1,15 +1,14 @@
-// app/page.tsx
 import React from "react";
-import { ArrowRight, Check, CreditCard, Shield, Zap, ExternalLink, ChevronRight } from "lucide-react";
+import { ArrowRight, Check, CreditCard, Shield, Zap, ExternalLink } from "lucide-react";
 
 const Pill = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
+  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 backdrop-blur-sm">
     {children}
   </span>
 );
 
 const FrostCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-full md:rounded-3xl border border-white/15 bg-white/10 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-white/10 ${className}`}>
+  <div className={`rounded-2xl md:rounded-3xl border border-white/15 bg-white/10 shadow-xl backdrop-blur-xl ${className}`}>
     {children}
   </div>
 );
@@ -26,33 +25,22 @@ const Row = ({ icon: Icon, title, desc }: { icon: any; title: string; desc: stri
 
 type PriceProps = {
   name: string;
-  price: string; // e.g. "$9.99"
+  price: string; // "$9.99"
   note?: string;
   features: string[];
-  href?: string; // Stripe link or internal route
+  href?: string; // Stripe link or /pricing
   popular?: boolean;
 };
 
 const Price = ({ name, price, note, features, href, popular = false }: PriceProps) => {
   const external = !!href && /^https?:\/\//i.test(href);
-  const Button = (
-    <a
-      href={href || "/pricing"}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold shadow-inner transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
-    >
-      Subscribe — {name} ({price}/mo) <ArrowRight className="size-4" aria-hidden />
-    </a>
-  );
-
   return (
     <FrostCard className={`p-6 md:p-8 transition-transform ${popular ? "ring-1 ring-white/40 scale-[1.01]" : "hover:scale-[1.01]"}`}>
       {popular && <div className="mb-4"><Pill>Recommended</Pill></div>}
       <div className="flex items-baseline justify-between">
         <h3 className="text-xl font-semibold">{name}</h3>
         <div className="text-3xl font-bold tracking-tight">
-          {price}
-          <span className="text-base font-medium text-white/70">/mo</span>
+          {price}<span className="text-base font-medium text-white/70">/mo</span>
         </div>
       </div>
       {note && <p className="mt-1 text-sm text-white/70">{note}</p>}
@@ -64,35 +52,23 @@ const Price = ({ name, price, note, features, href, popular = false }: PriceProp
           </li>
         ))}
       </ul>
-      {Button}
+      <a
+        href={href || "/pricing"}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } as any : {})}
+        className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold shadow-inner transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+      >
+        Subscribe — {name} ({price}/mo) <ArrowRight className="size-4" aria-hidden />
+      </a>
     </FrostCard>
   );
 };
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(1000px_700px_at_70%_-10%,rgba(255,255,255,0.18),transparent),radial-gradient(800px_500px_at_-10%_30%,rgba(255,255,255,0.10),transparent)] text-white antialiased transition-colors duration-300 dark:bg-black">
-      {/* NAV */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-black/30 border-b border-white/10">
-        <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-6 rounded-full bg-white/90 shadow ring-1 ring-black/10" />
-            <span className="font-semibold tracking-tight">OSAI</span>
-            <span className="hidden md:inline text-white/50">— your personal OS</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="#pricing" className="hidden md:inline text-sm text-white/80 hover:text-white">Pricing</a>
-            <a href="#account" className="hidden md:inline text-sm text-white/80 hover:text-white">Account</a>
-            <a href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold shadow-inner hover:bg-white/20">
-              Get OSAI <ChevronRight className="size-4" />
-            </a>
-          </div>
-        </nav>
-      </header>
-
+    <div className="min-h-screen bg-[radial-gradient(1000px_700px_at_70%_-10%,rgba(255,255,255,0.18),transparent),radial-gradient(800px_500px_at_-10%_30%,rgba(255,255,255,0.10),transparent)] text-white antialiased">
       {/* HERO */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-12 md:pt-20">
-        <div className="flex flex-col items-center text-center">
+      <section className="pt-12 md:pt-20 text-center">
+        <div className="flex flex-col items-center">
           <div className="mb-4"><Pill>Trainable • Private • Always on</Pill></div>
           <h1 className="text-4xl md:text-6xl font-semibold leading-[1.05] tracking-tight">
             Your personal OS assistant
@@ -102,17 +78,17 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
             <a href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold shadow-inner hover:bg-white/20">
-              See plans <ArrowRight className="size-4" />
+              See plans <ArrowRight className="size-4" aria-hidden />
             </a>
             <a href="#benefits" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 text-sm font-semibold hover:bg-white/10">
-              How it works <ExternalLink className="size-4" />
+              How it works <ExternalLink className="size-4" aria-hidden />
             </a>
           </div>
         </div>
       </section>
 
       {/* BENEFITS */}
-      <section id="benefits" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-14 md:pt-20">
+      <section id="benefits" className="pt-14 md:pt-20">
         <div className="grid md:grid-cols-3 gap-5">
           <FrostCard className="p-6 md:p-7">
             <Row icon={Zap} title="Fast to live" desc="Next.js + Supabase + Stripe. Create account, pay, use. No fluff." />
@@ -126,8 +102,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="pricing" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-14 md:pt-20">
+      {/* HOMEPAGE PRICING PREVIEW */}
+      <section className="pt-14 md:pt-20">
         <div className="mb-6 text-center">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
           <p className="mt-2 text-white/75">
@@ -140,44 +116,5 @@ export default function Home() {
             price="$9.99"
             note="Core assistant + essentials"
             features={["2 starter modules (Workout, Finance)", "Hosted checkout + portal", "Dark/Light themes"]}
-            href="https://buy.stripe.com/6oU00kbPvh03eUbb3U7g402" // replace with your Stripe Payment Link
+            href={process.env.NEXT_PUBLIC_STRIPE_BASIC_URL}
           />
-          <Price
-            name="Locked In"
-            price="$14.99"
-            note="All modules + priority updates"
-            features={["All current & future modules", "Priority improvements", "Beta features early"]}
-            href="https://buy.stripe.com/6oU00kbPvh03eUbb3U7g402" // replace with your Stripe Payment Link
-            popular
-          />
-        </div>
-      </section>
-
-      {/* ACCOUNT CTA */}
-      <section id="account" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-16">
-        <FrostCard className="p-6 md:p-10">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
-            <div className="grow">
-              <h3 className="text-xl md:text-2xl font-semibold tracking-tight">Manage your subscription</h3>
-              <p className="mt-2 text-sm text-white/75">Open the Stripe Customer Portal to update cards, change plans, or cancel anytime.</p>
-            </div>
-            <a href="/account" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold shadow-inner hover:bg-white/20">
-              Open Billing Portal <ArrowRight className="size-4" />
-            </a>
-          </div>
-        </FrostCard>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 text-sm flex flex-col md:flex-row items-center justify-between gap-4 text-white/70">
-          <div>© {new Date().getFullYear()} OSAI. All rights reserved.</div>
-          <div className="flex items-center gap-4">
-            <a className="hover:text-white" href="/legal/terms">Terms</a>
-            <a className="hover:text-white" href="/legal/privacy">Privacy</a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
