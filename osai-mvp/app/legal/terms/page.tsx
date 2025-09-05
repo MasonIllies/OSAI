@@ -1,17 +1,20 @@
-export default function Terms(){
+export default function Terms() {
   return (
-    <main className="prose mx-auto max-w-3xl p-10">
-      <h1>OSAI Terms of Service</h1>
-      <p><em>Last updated: 2025-09-04</em></p>
-      <p>OSAI is owned and operated by Mason Illies d/b/a OSAI.</p>
-      <p>These Terms govern your use of OSAI and related services.</p>
-      <h2>Subscriptions & Billing</h2>
-      <p>Subscriptions are billed via Stripe. Cancel any time via the customer portal.</p>
-      <h2>Acceptable Use</h2>
-      <p>No illegal use, IP infringement, or attempts to access other users’ data.</p>
-      <h2>Governing Law</h2>
-      <p>New Hampshire, USA.</p>
-      <p>Contact: support@osai.llc</p>
-    </main>
+    <section className="prose prose-invert max-w-none">
+      <h1>Terms of Service</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+      <h2>1. Overview</h2>
+      <p>OSAI provides subscription software and related services...</p>
+      <h2>2. Subscriptions</h2>
+      <p>Plans: Basic Control and Locked In. You can cancel anytime in the billing portal.</p>
+      <h2>3. Refunds</h2>
+      <p>Unless required by law, subscriptions are non-refundable once a billing period begins.</p>
+      <h2>4. Acceptable Use</h2>
+      <p>No illegal activity, abuse, scraping, or attempt to disrupt service.</p>
+      <h2>5. Liability</h2>
+      <p>Service provided “as is” without warranties; liability limited to fees paid in last 12 months.</p>
+      <h2>6. Contact</h2>
+      <p>support@osai.llc</p>
+    </section>
   );
 }
