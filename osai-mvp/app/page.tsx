@@ -118,3 +118,31 @@ export default function Home() {
             features={["2 starter modules (Workout, Finance)", "Hosted checkout + portal", "Dark/Light themes"]}
             href={process.env.NEXT_PUBLIC_STRIPE_BASIC_URL}
           />
+          <Price
+            name="Locked In"
+            price="$14.99"
+            note="All modules + priority updates"
+            features={["All current & future modules", "Priority improvements", "Beta features early"]}
+            href={process.env.NEXT_PUBLIC_STRIPE_LOCKED_URL}
+            popular
+          />
+        </div>
+      </section>
+
+      {/* ACCOUNT CTA */}
+      <section className="pt-14 md:pt-20 pb-4">
+        <FrostCard className="p-6 md:p-10">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
+            <div className="grow">
+              <h3 className="text-xl md:text-2xl font-semibold tracking-tight">Manage your subscription</h3>
+              <p className="mt-2 text-sm text-white/75">Open the Stripe Customer Portal to update cards, change plans, or cancel anytime.</p>
+            </div>
+            <a href="/account" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold shadow-inner hover:bg-white/20">
+              Open Billing Portal <ArrowRight className="size-4" aria-hidden />
+            </a>
+          </div>
+        </FrostCard>
+      </section>
+    </div>
+  );
+}
