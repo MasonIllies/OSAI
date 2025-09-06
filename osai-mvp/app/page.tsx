@@ -117,6 +117,13 @@ export default function Home() {
             >
               Pricing
             </a>
+            {/* NEW: Sign in link (soft gate) */}
+            <a
+              href="/signin"
+              className="hidden md:inline text-sm text-white/80 hover:text-white"
+            >
+              Sign in
+            </a>
             <a
               href="#account"
               className="hidden md:inline text-sm text-white/80 hover:text-white"
