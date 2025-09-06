@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
  * - Single source of truth for everything (work, workout, company, content, music, personal)
  * - LocalStorage persistence
  * - Week navigation (Mon–Sun), quick-add form
+ * - Custom-styled <select> with hidden native arrow + our chevron
  */
 
 type ID = string;
@@ -70,6 +71,48 @@ function loadStore(): CalStore {
 
 function saveStore(store: CalStore) {
   localStorage.setItem(CAL_KEY, JSON.stringify(store));
+}
+
+/* ------------------ Little UI helpers ------------------ */
+function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30 ${props.className || ""}`}
+    />
+  );
+}
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...props}
+      className={`w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30 ${props.className || ""}`}
+    />
+  );
+}
+
+/** Beautiful, cross-browser select: hides native arrow and adds our chevron */
+function PrettySelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const { className = "", children, ...rest } = props;
+  return (
+    <div className="relative">
+      <select
+        {...rest}
+        className={
+          "appearance-none w-full rounded-lg border border-white/15 bg-white/5 pr-10 pl-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30 " +
+          className
+        }
+      >
+        {children}
+      </select>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-70">
+        {/* Down chevron SVG */}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    </div>
+  );
 }
 
 /* ------------------ Component ------------------ */
@@ -152,40 +195,40 @@ export default function CalendarPage() {
         <div className="grid md:grid-cols-6 gap-3 mt-4">
           <label className="md:col-span-2 text-sm">
             <span className="text-white/80">Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Deep work / Leg day / Mix" className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Deep work / Leg day / Mix" />
           </label>
 
           <label className="text-sm">
             <span className="text-white/80">Type</span>
-            <select value={type} onChange={(e) => setType(e.target.value as CalType)} className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30">
+            <PrettySelect value={type} onChange={(e) => setType(e.target.value as CalType)}>
               <option value="work">Work</option>
               <option value="workout">Workout</option>
               <option value="company">Company</option>
               <option value="content">Content / YouTube</option>
               <option value="music">Music</option>
               <option value="personal">Personal</option>
-            </select>
+            </PrettySelect>
           </label>
 
           <label className="text-sm">
             <span className="text-white/80">Date</span>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30" />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
 
           <label className="text-sm">
             <span className="text-white/80">Start</span>
-            <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30" />
+            <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
           </label>
 
           <label className="text-sm">
             <span className="text-white/80">Duration (min)</span>
-            <input type="number" inputMode="numeric" value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30" />
+            <Input type="number" inputMode="numeric" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
           </label>
         </div>
 
         <label className="block text-sm mt-3">
           <span className="text-white/80">Notes (optional)</span>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="w-full mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30" />
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
         </label>
 
         <div className="mt-4">
