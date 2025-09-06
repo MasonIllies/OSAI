@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
- * OSAI Weekly Calendar — visual timetable + guided add flow
+ * OSAI Calendar — GPT Bar + Day/Week/Month/Year Views
  *
- * NEW:
- * - Custom dark dropdowns (no OS-white menus)
- * - Guided flow: 1) Add to calendar  2) Select module/routine  3) Assistant box (days/times/recurring)
- * - Reads Workout routines from localStorage (osai_workout_v2) for selection
- * - College-style grid (Mon–Sun by hour) with gradient blocks
+ * - GPT-style input: “What do you want to add?” (freeform → parsed → scheduled)
+ * - Views:
+ *    • Day: agenda + hour timeline for a single date
+ *    • Week: visual “college-style” timetable (Mon–Sun)
+ *    • Month: 6-week grid with event pills
+ *    • Year: 12-month overview with monthly counts
+ * - LocalStorage for events + simple weekly recurrence rules
  */
 
 type ID = string;
@@ -22,32 +24,27 @@ type CalEvent = {
   startISO: string;
   endISO: string;
   notes?: string;
+  location?: string;
 };
 type CalStore = { events: CalEvent[] };
 
-/* --------- Routines (pulled from Workout module storage) --------- */
+type ChatMsg = { role: "user" | "assistant"; text: string; chips?: { label: string; apply: () => void }[] };
+
 type ProgressionMode = "weight" | "reps";
-type RoutineExercise = {
-  id: ID;
-  name: string;
-  sets: number;
-  reps: number;
-  weight: number;
-  progression: { mode: ProgressionMode; step: number; capReps?: number };
-};
-type Routine = { id: ID; name: string; exercises: RoutineExercise[] };
+type Routine = { id: ID; name: string; exercises: { id: ID; name: string; sets: number; reps: number; weight: number; progression: { mode: ProgressionMode; step: number; capReps?: number } }[] };
 type WorkoutStoreV2 = { routines: Routine[]; activeRoutineId?: ID; history: any[] };
 
 const CAL_KEY = "osai_calendar_v1";
 const WORKOUT_KEY = "osai_workout_v2";
+const RULES_KEY = "osai_calendar_rules_v1";
 
-/* ---------- Visual grid constants ---------- */
-const DAY_START_HOUR = 6;   // 6:00
-const DAY_END_HOUR = 22;    // 22:00
-const PX_PER_MIN = 1;       // 60 min -> 60px
-
-/* ------------------ Utilities ------------------ */
+/* ---- Visual timetable constants ---- */
+const DAY_START_HOUR = 6;
+const DAY_END_HOUR = 22;
+const PX_PER_MIN = 1;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/* ---------------- Utils ---------------- */
 function uid(): ID { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function startOfWeek(d = new Date()): Date {
   const x = new Date(d);
@@ -55,137 +52,436 @@ function startOfWeek(d = new Date()): Date {
   x.setHours(0, 0, 0, 0);
   return new Date(x.getTime() - day * DAY_MS);
 }
-function addDays(d: Date, days: number): Date { const x = new Date(d); x.setDate(x.getDate() + days); return x; }
-function toISOLocal(date: Date, timeHHMM: string): string {
+function startOfMonth(d = new Date()): Date { const x = new Date(d); x.setDate(1); x.setHours(0,0,0,0); return x; }
+function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function addWeeks(d: Date, n: number) { return addDays(d, n * 7); }
+function addMonths(d: Date, n: number) { const x = new Date(d); x.setMonth(x.getMonth() + n); return x; }
+function addYears(d: Date, n: number) { const x = new Date(d); x.setFullYear(x.getFullYear() + n); return x; }
+function toISOLocal(date: Date, timeHHMM: string) {
   const [hh, mm] = timeHHMM.split(":").map((n) => parseInt(n || "0", 10));
   const d = new Date(date);
   d.setHours(hh, mm, 0, 0);
   return d.toISOString();
 }
 function fmtDayShort(d: Date) { return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); }
+function fmtDayLong(d: Date) { return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }); }
+function fmtMonthYear(d: Date) { return d.toLocaleDateString(undefined, { month: "long", year: "numeric" }); }
+function fmtYear(d: Date) { return d.getFullYear().toString(); }
 function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); }
-function minutesFromStart(iso: string) {
-  const dt = new Date(iso);
-  const mins = dt.getHours() * 60 + dt.getMinutes();
-  return Math.max(0, mins - DAY_START_HOUR * 60);
-}
+function minutesFromStart(iso: string) { const dt = new Date(iso); return Math.max(0, dt.getHours() * 60 + dt.getMinutes() - DAY_START_HOUR * 60); }
 function eventDurationMin(ev: CalEvent) { return Math.max(15, Math.round((+new Date(ev.endISO) - +new Date(ev.startISO)) / 60000)); }
-function loadCalendar(): CalStore {
-  try {
-    const raw = localStorage.getItem(CAL_KEY);
-    if (!raw) return { events: [] };
-    const parsed = JSON.parse(raw) as CalStore;
-    if (!parsed.events) parsed.events = [];
-    return parsed;
-  } catch { return { events: [] }; }
+function sameDay(a: Date, b: Date) { return a.toISOString().slice(0,10) === b.toISOString().slice(0,10); }
+
+function load<T>(key: string, fallback: T): T {
+  try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : fallback; } catch { return fallback; }
 }
-function saveCalendar(store: CalStore) { localStorage.setItem(CAL_KEY, JSON.stringify(store)); }
-function loadWorkout(): WorkoutStoreV2 | null {
-  try {
-    const raw = localStorage.getItem(WORKOUT_KEY);
-    return raw ? (JSON.parse(raw) as WorkoutStoreV2) : null;
-  } catch { return null; }
+function save<T>(key: string, val: T) { localStorage.setItem(key, JSON.stringify(val)); }
+
+/* ---------------- Parsers (from the GPT edition) ---------------- */
+const MONTHS = ["jan","feb","mar","apr","may","jun","jul","aug","sep","sept","oct","nov","dec"];
+const DOW: Record<string, number> = { sun:0, sunday:0, mon:1, monday:1, tue:2, tues:2, tuesday:2, wed:3, weds:3, wednesday:3, thu:4, thur:4, thurs:4, thursday:4, fri:5, friday:5, sat:6, saturday:6 };
+
+type Intent = {
+  type?: CalType;
+  title?: string;
+  routineName?: string;
+  days?: number[];          // 0..6
+  date?: Date;              // explicit date
+  start?: string;           // "HH:MM"
+  end?: string;             // "HH:MM"
+  duration?: number;        // minutes
+  location?: string;
+  with?: string[];
+  recurring?: boolean;
+  notes?: string;
+};
+
+function guessType(text: string): CalType | undefined {
+  const t = text.toLowerCase();
+  if (/\bworkout|gym|lift|squat|deadlift|bench\b/.test(t)) return "workout";
+  if (/\bcontent|youtube|video|script|shoot|edit\b/.test(t)) return "content";
+  if (/\bmusic|mix|master|studio|song|album\b/.test(t)) return "music";
+  if (/\bcompany|startup|osai|sales|client\b/.test(t)) return "company";
+  if (/\bpersonal|errand|dentist|doctor|family\b/.test(t)) return "personal";
+  if (/\bwork|meeting|deep work|focus\b/.test(t)) return "work";
+  return undefined;
 }
 
-/* ------------------ Little UI helpers ------------------ */
-function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className={`w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-white/30 ${props.className || ""}`}
-    />
-  );
-}
-function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      className={`w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-white/30 ${props.className || ""}`}
-    />
-  );
-}
-function Pill({ children }: { children: React.ReactNode }) {
-  return <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-xs text-white/80">{children}</span>;
-}
-function Chip({ label, active, onClick }: { label: string; active?: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs border transition ${active ? "bg-white/20 border-white/30" : "bg-white/5 border-white/15 hover:bg-white/10"}`}
-    >
-      {label}
-    </button>
-  );
+function parseDays(text: string, anchorWeekStart: Date): { days?: number[]; date?: Date; recurring?: boolean } {
+  const t = text.toLowerCase();
+
+  if (/\bweekdays?\b/.test(t)) return { days: [1,2,3,4,5], recurring: true };
+  if (/\bweekends?\b/.test(t)) return { days: [0,6], recurring: true };
+
+  const set = new Set<number>();
+  for (const [k, idx] of Object.entries(DOW)) if (new RegExp(`\\b${k}\\b`).test(t)) set.add(idx);
+  if (set.size) return { days: [...set], recurring: true };
+
+  if (/\btoday\b/.test(t)) return { date: new Date(), recurring: false };
+  if (/\btomorrow\b/.test(t)) return { date: addDays(new Date(), 1), recurring: false };
+
+  const nextX = t.match(/next\s+(sun|mon|tue|tues|weds?|thu|thur|thurs|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)/);
+  if (nextX) {
+    const idx = DOW[nextX[1]];
+    let d = startOfWeek(anchorWeekStart); d = addDays(d, idx);
+    if (d <= new Date()) d = addDays(d, 7);
+    return { date: d, recurring: false };
+  }
+  const m = t.match(new RegExp(`\\b(${MONTHS.join("|")})\\s*(\\d{1,2})\\b`));
+  if (m) {
+    const month = Math.max(0, MONTHS.indexOf(m[1]));
+    const day = parseInt(m[2], 10);
+    const y = new Date().getFullYear();
+    return { date: new Date(y, month, day), recurring: false };
+  }
+  return {};
 }
 
-/** Custom dark dropdown (no OS-white). Keyboard + click outside supported. */
-function DarkSelect<T extends string>({
-  value,
-  onChange,
-  options,
-  getLabel,
-  className = "",
-}: {
-  value: T;
-  onChange: (next: T) => void;
-  options: T[];
-  getLabel: (v: T) => string;
-  className?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const listRef = useRef<HTMLDivElement | null>(null);
+function normalizeHour(h: number, ampm?: string | null) {
+  let H = h;
+  if (ampm) {
+    if (/pm/.test(ampm) && H < 12) H += 12;
+    if (/am/.test(ampm) && H === 12) H = 0;
+  } else {
+    if (H >= 1 && H <= 7) H += 12;
+  }
+  return H;
+}
+function parseTime(text: string): { start?: string; end?: string; duration?: number } {
+  const t = text.toLowerCase();
+  const r = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–to]+\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+  if (r) {
+    let H1 = normalizeHour(parseInt(r[1], 10), r[3]);
+    const M1 = r[2] ? parseInt(r[2], 10) : 0;
+    let H2 = normalizeHour(parseInt(r[4], 10), r[6] || r[3] || null);
+    const M2 = r[5] ? parseInt(r[5], 10) : 0;
+    const s = `${String(H1).padStart(2,"0")}:${String(M1).padStart(2,"0")}`;
+    const e = `${String(H2).padStart(2,"0")}:${String(M2).padStart(2,"0")}`;
+    return { start: s, end: e };
+  }
+  const s1 = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+  const d1 = t.match(/(\d+)\s*(min|mins|minutes|m|h|hr|hour|hours)/);
+  if (s1 && d1) {
+    let H = normalizeHour(parseInt(s1[1], 10), s1[3]);
+    const M = s1[2] ? parseInt(s1[2], 10) : 0;
+    let dur = parseInt(d1[1], 10);
+    if (/h/.test(d1[2])) dur *= 60;
+    return { start: `${String(H).padStart(2,"0")}:${String(M).padStart(2,"0")}`, duration: dur };
+  }
+  return {};
+}
+function parseLocation(text: string): string | undefined {
+  const at = text.match(/@\s*([^,]+(?:, *[^,]+)*)/i);
+  return at ? at[1].trim() : undefined;
+}
+function parseWith(text: string): string[] {
+  const names: string[] = [];
+  const regex = /\bwith\s+([a-z][a-z\s.'-]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(text))) names.push(m[1].trim());
+  return names;
+}
+function parseIntent(raw: string, anchorWeekStart: Date) {
+  const text = raw.trim(); const t = text.toLowerCase();
+  const intent: Intent = {};
+  intent.type = guessType(t);
+  const workout = load<WorkoutStoreV2>(WORKOUT_KEY, { routines: [] });
+  if (intent.type === "workout" && workout.routines.length) {
+    const found = workout.routines.find((r) => t.includes(r.name.toLowerCase()));
+    if (found) intent.routineName = found.name;
+  }
+  if (!intent.routineName) {
+    const stripped = t.replace(/@\s.*$/, "").replace(/\b(with|at|on|every|each|week|weekly|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun|am|pm|for|minutes?|mins?|hours?|hr|h)\b/gi, "");
+    const words = stripped.split(/\s+/).filter(Boolean);
+    if (words.length) intent.title = words.slice(0, 5).join(" ");
+  }
+  Object.assign(intent, parseDays(t, anchorWeekStart));
+  Object.assign(intent, parseTime(t));
+  intent.location = parseLocation(text);
+  intent.with = parseWith(text);
+  if (/\b(recurring|every week|weekly|each week)\b/i.test(t)) intent.recurring = true;
 
+  const notesBits: string[] = [];
+  const afterComma = text.split("@")[0];
+  const hint = afterComma.split(/,|–|-—/).slice(1).join(",").trim();
+  if (hint) notesBits.push(hint);
+  if (intent.with?.length) notesBits.push("With: " + intent.with.join(", "));
+  if (intent.location) notesBits.push("Location: " + intent.location);
+  intent.notes = notesBits.filter(Boolean).join(" · ");
+  return intent;
+}
+
+/* ---------------- Recurring rules ---------------- */
+type RecurrenceRule = {
+  id: ID;
+  type: CalType;
+  titleOrRoutine: string;
+  days: number[];
+  time: string;
+  duration: number;
+  location?: string;
+  notes?: string;
+};
+function applyRulesToWeek(rules: RecurrenceRule[], weekStart: Date, push: (ev: CalEvent) => void) {
+  const thisWeekISO = new Set<string>();
+  rules.forEach((r) => {
+    r.days.forEach((dow) => {
+      const day = addDays(startOfWeek(weekStart), dow);
+      const sISO = toISOLocal(day, r.time);
+      const eISO = new Date(new Date(sISO).getTime() + r.duration * 60000).toISOString();
+      const title = r.type === "workout" ? `Workout: ${r.titleOrRoutine}` : r.titleOrRoutine;
+      const ev: CalEvent = { id: uid(), title, type: r.type, startISO: sISO, endISO: eISO, location: r.location, notes: r.notes };
+      const key = `${r.type}|${title}|${sISO}`;
+      if (!thisWeekISO.has(key)) { push(ev); thisWeekISO.add(key); }
+    });
+  });
+}
+
+/* ---------------- Component ---------------- */
+type View = "day" | "week" | "month" | "year";
+
+export default function CalendarPage() {
+  const [store, setStore] = useState<CalStore>({ events: [] });
+  const [rules, setRules] = useState<RecurrenceRule[]>([]);
+  const [view, setView] = useState<View>("week");
+  // Cursor date controls what date the current view is anchored to
+  const [cursor, setCursor] = useState<Date>(new Date());
+  const weekStart = startOfWeek(cursor);
+
+  // Chat
+  const [chat, setChat] = useState<ChatMsg[]>([{ role: "assistant", text: "What do you want to add?" }]);
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Load/save
+  useEffect(() => { setStore(load<CalStore>(CAL_KEY, { events: [] })); setRules(load<RecurrenceRule[]>(RULES_KEY, [])); }, []);
+  useEffect(() => { save(CAL_KEY, store); }, [store]);
+  useEffect(() => { save(RULES_KEY, rules); }, [rules]);
+
+  // Apply recurrence for the currently shown week
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!open) return;
-      const t = e.target as Node;
-      if (btnRef.current?.contains(t)) return;
-      if (listRef.current?.contains(t)) return;
-      setOpen(false);
+    const toAdd: CalEvent[] = [];
+    applyRulesToWeek(rules, weekStart, (ev) => toAdd.push(ev));
+    if (toAdd.length) setStore((s) => ({ events: [...s.events, ...toAdd] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekStart]);
+
+  // Derived
+  const hours = useMemo(() => { const list:number[]=[]; for (let h=DAY_START_HOUR; h<=DAY_END_HOUR; h++) list.push(h); return list; }, []);
+  const daysOfWeek = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+
+  // Helpers
+  function eventsForDate(d: Date): CalEvent[] {
+    const ds = d.toISOString().slice(0, 10);
+    return store.events.filter(e => e.startISO.slice(0,10) === ds).sort((a,b) => +new Date(a.startISO) - +new Date(b.startISO));
+  }
+  function eventsForMonth(m: Date): CalEvent[] {
+    const y = m.getFullYear(); const mon = m.getMonth();
+    return store.events.filter(e => { const dt = new Date(e.startISO); return dt.getFullYear() === y && dt.getMonth() === mon; });
+  }
+  function removeEvent(id: ID) { setStore({ events: store.events.filter((e) => e.id !== id) }); }
+
+  /* ---------- GPT-ish handling ---------- */
+  function respond(msg: ChatMsg) {
+    setChat((c) => [...c, msg]);
+    setTimeout(() => scrollRef.current?.scrollTo({ top: 999999, behavior: "smooth" }), 0);
+  }
+
+  function handleSubmit() {
+    const userText = input.trim();
+    if (!userText) return;
+    respond({ role: "user", text: userText });
+    setInput("");
+
+    const intent = parseIntent(userText, weekStart);
+    if (!intent.type) intent.type = "work";
+    if (intent.type === "workout" && intent.routineName) intent.title = `Workout: ${intent.routineName}`;
+    if (!intent.title) intent.title = intent.type === "workout" ? "Workout" : "Block";
+
+    const missing: string[] = [];
+    if (!intent.days && !intent.date) missing.push("which days");
+    if (!intent.start && !intent.end && !intent.duration) missing.push("time");
+    if (!(intent.end || intent.duration)) missing.push("duration");
+
+    if (missing.length) {
+      const chips: ChatMsg["chips"] = [
+        { label: "MWF · 7–8am · weekly", apply: () => quickApply({ days: [1,3,5], start: "07:00", end: "08:00", recurring: true }) },
+        { label: "Tue/Thu · 6–7:30pm", apply: () => quickApply({ days: [2,4], start: "18:00", end: "19:30", recurring: true }) },
+        { label: "Today · 60m · 4pm", apply: () => quickApply({ date: new Date(), start: "16:00", duration: 60 }) },
+      ];
+      respond({
+        role: "assistant",
+        text: `Got it: **${intent.title}**${intent.location ? ` @ ${intent.location}` : ""}${intent.with?.length ? ` (with ${intent.with.join(", ")})` : ""}. I need ${missing.join(", ")}.`,
+        chips,
+      });
+      (window as any).__osaiDraft = intent;
+      return;
     }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+    finalizeAndSchedule(intent);
+  }
+  function quickApply(overrides: Partial<Intent>) {
+    const base: Intent = (window as any).__osaiDraft || {};
+    const merged: Intent = { ...base, ...overrides };
+    finalizeAndSchedule(merged);
+    (window as any).__osaiDraft = undefined;
+  }
+  function finalizeAndSchedule(intent: Intent) {
+    const title = intent.title!; const type = intent.type!; const recurring = !!intent.recurring;
+    const addList: CalEvent[] = [];
+    if (intent.date) {
+      const s = toISOLocal(intent.date, intent.start || "09:00");
+      const e = intent.end ? toISOLocal(intent.date, intent.end) : new Date(new Date(s).getTime() + (intent.duration || 60) * 60000).toISOString();
+      addList.push({ id: uid(), title, type, startISO: s, endISO: e, notes: intent.notes, location: intent.location });
+      setView("day"); setCursor(intent.date);
+    } else if (intent.days && intent.days.length) {
+      const base = startOfWeek(weekStart);
+      intent.days.forEach((dow) => {
+        const day = addDays(base, dow);
+        const s = toISOLocal(day, intent.start || "09:00");
+        const e = intent.end ? toISOLocal(day, intent.end) : new Date(new Date(s).getTime() + (intent.duration || 60) * 60000).toISOString();
+        addList.push({ id: uid(), title, type, startISO: s, endISO: e, notes: intent.notes, location: intent.location });
+      });
+      setView("week"); // you just scheduled a set for the week
+    }
+    if (addList.length) setStore({ events: [...store.events, ...addList] });
+
+    if (recurring && intent.days?.length && (intent.start || intent.end)) {
+      const time = intent.start || "09:00";
+      const duration = intent.duration || (intent.start && intent.end
+        ? Math.max(15, (parseInt(intent.end.slice(0,2))*60+parseInt(intent.end.slice(3)))-(parseInt(time.slice(0,2))*60+parseInt(time.slice(3))))
+        : 60);
+      const rule: RecurrenceRule = {
+        id: uid(),
+        type,
+        titleOrRoutine: intent.type === "workout" && intent.routineName ? intent.routineName : title,
+        days: intent.days!,
+        time,
+        duration,
+        location: intent.location,
+        notes: intent.notes,
+      };
+      setRules([...rules, rule]);
+    }
+    respond({ role: "assistant", text: `Added **${title}**${intent.location ? ` @ ${intent.location}` : ""}${intent.with?.length ? ` (with ${intent.with.join(", ")})` : ""}${recurring ? " — recurring weekly" : ""}.` });
+  }
+
+  /* ---------- Navigation (honors current view) ---------- */
+  function prev() {
+    if (view === "day") setCursor(addDays(cursor, -1));
+    else if (view === "week") setCursor(addWeeks(cursor, -1));
+    else if (view === "month") setCursor(addMonths(cursor, -1));
+    else setCursor(addYears(cursor, -1));
+  }
+  function next() {
+    if (view === "day") setCursor(addDays(cursor, +1));
+    else if (view === "week") setCursor(addWeeks(cursor, +1));
+    else if (view === "month") setCursor(addMonths(cursor, +1));
+    else setCursor(addYears(cursor, +1));
+  }
+  function today() { setCursor(new Date()); }
 
   return (
-    <div className={`relative ${className}`}>
-      <button
-        ref={btnRef}
-        type="button"
-        className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white flex items-center justify-between focus:ring-2 focus:ring-white/30"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span className="truncate">{getLabel(value)}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden className="opacity-70">
-          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-
-      {open && (
-        <div
-          ref={listRef}
-          className="absolute z-50 mt-1 w-full rounded-lg border border-white/15 bg-black/80 backdrop-blur-xl shadow-xl"
-        >
-          <div className="max-h-56 overflow-auto py-1">
-            {options.map((opt) => (
-              <button
-                key={opt}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${opt === value ? "text-white" : "text-white/80"}`}
-                onClick={() => { onChange(opt); setOpen(false); }}
-              >
-                {getLabel(opt)}
+    <section className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Calendar</h1>
+          <div className="text-white/70">
+            {view === "day" && fmtDayLong(cursor)}
+            {view === "week" && `${fmtDayShort(daysOfWeek[0])} → ${fmtDayShort(daysOfWeek[6])}`}
+            {view === "month" && fmtMonthYear(cursor)}
+            {view === "year" && fmtYear(cursor)}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* View tabs */}
+          <div className="rounded-full bg-white/5 border border-white/10 p-1 flex">
+            {(["day","week","month","year"] as View[]).map(v => (
+              <button key={v} className={`px-3 py-1.5 text-sm rounded-full ${view===v?"bg-white/20":"hover:bg-white/10"}`} onClick={()=>setView(v)}>
+                {v[0].toUpperCase()+v.slice(1)}
               </button>
             ))}
           </div>
+          {/* Nav */}
+          <button className="btn-ghost" onClick={prev}>← Prev</button>
+          <button className="btn" onClick={today}>Today</button>
+          <button className="btn-ghost" onClick={next}>Next →</button>
         </div>
+      </div>
+
+      {/* GPT BAR */}
+      <div className="card p-0 overflow-hidden">
+        <div className="max-h-60 overflow-auto px-4 pt-4" ref={scrollRef}>
+          {chat.map((m, i) => (
+            <div key={i} className={`mb-3 ${m.role === "user" ? "text-right" : "text-left"}`}>
+              <div className={`inline-block max-w-[90%] rounded-2xl px-3 py-2 text-sm ${m.role === "user" ? "bg-white/20" : "bg-white/8 border border-white/10"}`}>
+                <div className="whitespace-pre-wrap">{m.text}</div>
+                {m.chips && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {m.chips.map((c, idx) => (
+                      <button key={idx} className="rounded-full px-3 py-1 text-xs border bg-white/5 border-white/15 hover:bg-white/10" onClick={c.apply}>
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-white/10 px-3 py-2">
+          <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='e.g., "workout mon & wed 4–6 with Tom @ Railyard, legs first"'
+              className="flex-1 rounded-xl bg-white/5 border border-white/15 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30"
+            />
+            <button className="btn" type="submit">Add</button>
+          </form>
+        </div>
+      </div>
+
+      {/* VIEWS */}
+      {view === "day" && (
+        <DayView
+          date={cursor}
+          events={eventsForDate(cursor)}
+          removeEvent={removeEvent}
+        />
       )}
-    </div>
+
+      {view === "week" && (
+        <WeekView
+          days={daysOfWeek}
+          hours={hours}
+          totalHeight={(DAY_END_HOUR - DAY_START_HOUR) * 60 * PX_PER_MIN}
+          eventsForDate={eventsForDate}
+          removeEvent={removeEvent}
+        />
+      )}
+
+      {view === "month" && (
+        <MonthView
+          monthCursor={startOfMonth(cursor)}
+          eventsForMonth={eventsForMonth}
+          onPickDay={(d) => { setCursor(d); setView("day"); }}
+        />
+      )}
+
+      {view === "year" && (
+        <YearView
+          yearCursor={new Date(cursor.getFullYear(), 0, 1)}
+          eventsForMonth={eventsForMonth}
+          onPickMonth={(d) => { setCursor(d); setView("month"); }}
+        />
+      )}
+    </section>
   );
 }
 
-/* Color/gradient per type */
+/* ====================== VIEW COMPONENTS ====================== */
+
 function gradientFor(type: CalType) {
   switch (type) {
     case "workout":  return "from-emerald-400/40 to-emerald-600/40 border-emerald-300/40";
@@ -197,312 +493,198 @@ function gradientFor(type: CalType) {
   }
 }
 
-/* ------------------ Component ------------------ */
-export default function CalendarPage() {
-  const [store, setStore] = useState<CalStore>({ events: [] });
-  const [weekStart, setWeekStart] = useState<Date>(startOfWeek());
-
-  // Guided flow
-  type Step = 1 | 2 | 3;
-  const [step, setStep] = useState<Step>(1);
-
-  // Step 1 (what type)
-  const [type, setType] = useState<CalType>("work");
-
-  // Step 2 (module/routine or title)
-  const workout = loadWorkout();
-  const routines = workout?.routines || [];
-  const [routineId, setRoutineId] = useState<ID>(workout?.activeRoutineId || routines[0]?.id);
-  const [title, setTitle] = useState<string>("Deep Work");
-
-  // Step 3 (assistant)
-  const [assistantText, setAssistantText] = useState<string>(
-    "Mon, Wed, Fri at 7:00am for 60 min, recurring weekly"
-  );
-  const [daysSel, setDaysSel] = useState<Record<number, boolean>>({1:true,3:true,5:true}); // Mon/Wed/Fri
-  const [time, setTime] = useState("07:00");
-  const [duration, setDuration] = useState<number>(60);
-  const [recurring, setRecurring] = useState<boolean>(true);
-  const [notes, setNotes] = useState("");
-
-  // Storage
-  useEffect(() => setStore(loadCalendar()), []);
-  useEffect(() => saveCalendar(store), [store]);
-
-  // Grid days/hours
-  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+/* ---- Day View (agenda + hour rail) ---- */
+function DayView({ date, events, removeEvent }: { date: Date; events: CalEvent[]; removeEvent: (id: ID) => void; }) {
+  const hours = Array.from({length: (DAY_END_HOUR - DAY_START_HOUR) + 1}, (_,i)=>DAY_START_HOUR+i);
   const totalHeight = (DAY_END_HOUR - DAY_START_HOUR) * 60 * PX_PER_MIN;
-  const hours = useMemo(() => { const list:number[]=[]; for (let h=DAY_START_HOUR; h<=DAY_END_HOUR; h++) list.push(h); return list; }, []);
 
-  /* ---------------- Actions ---------------- */
-  function prevWeek() { setWeekStart(addDays(weekStart, -7)); }
-  function nextWeek() { setWeekStart(addDays(weekStart, 7)); }
-  function todayWeek() { setWeekStart(startOfWeek(new Date())); }
-
-  function removeEvent(id: ID) {
-    setStore({ events: store.events.filter((e) => e.id !== id) });
-  }
-  function eventsFor(day: Date): CalEvent[] {
-    const ds = day.toISOString().slice(0, 10);
-    return store.events
-      .filter((e) => e.startISO.slice(0, 10) === ds)
-      .sort((a, b) => +new Date(a.startISO) - +new Date(b.startISO));
-  }
-
-  // Very small natural-language helper for the assistant box
-  function interpretAssistant(text: string) {
-    const t = text.toLowerCase();
-
-    // days
-    const map: Record<string, number> = { sun:0, mon:1, tue:2, tues:2, wed:3, thu:4, thur:4, fri:5, sat:6 };
-    const nextDays: Record<number, boolean> = {};
-    Object.entries(map).forEach(([k, idx]) => { if (t.includes(k)) nextDays[idx] = true; });
-
-    // time (7am / 7:30am / 19:00)
-    let foundTime = time;
-    const m = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
-    if (m) {
-      let h = parseInt(m[1],10);
-      const mm = m[2] ? parseInt(m[2],10) : 0;
-      const ap = m[3];
-      if (ap === "pm" && h < 12) h += 12;
-      if (ap === "am" && h === 12) h = 0;
-      foundTime = `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
-    }
-
-    // duration (e.g., 60 min / 1h / 90 minutes)
-    let dur = duration;
-    const md = t.match(/(\d+)\s*(min|mins|minutes|m)/) || t.match(/(\d+)\s*(h|hr|hour|hours)/);
-    if (md) {
-      const val = parseInt(md[1],10);
-      const unit = md[2];
-      dur = /h/.test(unit) ? val * 60 : val;
-    }
-
-    // recurring?
-    const rec = /recurring|every week|weekly|each week/.test(t);
-
-    setDaysSel(Object.keys(nextDays).length ? nextDays : daysSel);
-    setTime(foundTime);
-    setDuration(dur);
-    setRecurring(rec);
-  }
-
-  function addToCalendar() {
-    const baseTitle =
-      type === "workout"
-        ? `Workout: ${routines.find(r => r.id === routineId)?.name || "Routine"}`
-        : title.trim() || "Block";
-
-    const chosenDays = Object.entries(daysSel).filter(([, on]) => on).map(([idx]) => Number(idx));
-    if (chosenDays.length === 0) return alert("Select at least one day.");
-
-    const calEvents: CalEvent[] = [];
-    const weekBase = startOfWeek(weekStart);
-
-    chosenDays.forEach((dow) => {
-      const d = addDays(weekBase, dow);
-      const startISO = toISOLocal(d, time);
-      const endISO = new Date(new Date(startISO).getTime() + duration * 60000).toISOString();
-      calEvents.push({
-        id: uid(),
-        title: baseTitle,
-        type,
-        startISO,
-        endISO,
-        notes: notes || undefined,
-      });
-    });
-
-    setStore({ events: [...store.events, ...calEvents] });
-    if (recurring) {
-      alert("Added to this week. (Recurring weekly scheduling UI coming next.)");
-    }
-    setStep(1); // reset flow to the top
-  }
-
-  /* ---------------- Render ---------------- */
   return (
-    <section className="space-y-8">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-4xl font-bold tracking-tight">Calendar</h1>
-        <div className="flex gap-2">
-          <button className="btn-ghost" onClick={prevWeek}>← Prev</button>
-          <button className="btn" onClick={todayWeek}>This Week</button>
-          <button className="btn-ghost" onClick={nextWeek}>Next →</button>
-        </div>
-      </div>
-      <p className="text-white/80 max-w-3xl">
-        A single, visual planner. Mix <b>work</b>, <b>workouts</b>, <b>company</b>, <b>content</b> (YouTube), <b>music</b>, and <b>personal</b> in one grid.
-      </p>
-
-      {/* Guided Add Flow */}
-      <div className="card p-6 md:p-8 space-y-6">
-        <div className="flex items-center gap-2">
-          <Pill>1</Pill><div className="font-semibold">Add to calendar</div>
-        </div>
-        <div className="grid md:grid-cols-3 gap-3">
-          <DarkSelect<CalType>
-            value={type}
-            onChange={setType}
-            options={["work", "workout", "company", "content", "music", "personal"]}
-            getLabel={(v) =>
-              ({ work:"Work", workout:"Workout", company:"Company", content:"Content / YouTube", music:"Music", personal:"Personal" } as const)[v]
-            }
-          />
-          {type === "workout" ? (
-            <DarkSelect<string>
-              value={routineId || ""}
-              onChange={(id) => setRoutineId(id)}
-              options={(routines.length ? routines : [{ id: "", name: "No routines found — create one in Workout", exercises: [] } as Routine]).map(r => r.id)}
-              getLabel={(id) => routines.find(r => r.id === id)?.name || "No routines found — open /modules/workout"}
-              className="md:col-span-2"
-            />
-          ) : (
-            <Input className="md:col-span-2" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Block title (e.g., Deep Work)" />
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 pt-2">
-          <Pill>2</Pill><div className="font-semibold">Assistant</div>
-        </div>
-        <p className="text-sm text-white/70 -mt-2">
-          Tell me days, times, duration, and whether it repeats. Example: <i>“Mon, Wed, Fri at 7am for 60 min, recurring weekly”</i>
-        </p>
-        <Textarea value={assistantText} onChange={(e) => setAssistantText(e.target.value)} rows={2} />
-        <div className="flex flex-wrap gap-2">
-          <Chip label="Parse" onClick={() => interpretAssistant(assistantText)} />
-          <Chip label="MWF · 60m · 7am · weekly" onClick={() => { setDaysSel({1:true,3:true,5:true}); setTime("07:00"); setDuration(60); setRecurring(true); }} />
-          <Chip label="TTh · 90m · 6pm" onClick={() => { setDaysSel({2:true,4:true}); setTime("18:00"); setDuration(90); setRecurring(false); }} />
-          <Chip label="Daily · 30m · 8am" onClick={() => { setDaysSel({0:true,1:true,2:true,3:true,4:true,5:true,6:true}); setTime("08:00"); setDuration(30); setRecurring(true); }} />
-        </div>
-
-        <div className="grid md:grid-cols-5 gap-3">
-          <div className="md:col-span-2">
-            <div className="text-sm text-white/80">Days (this week, Mon start)</div>
-            <div className="mt-2 grid grid-cols-7 gap-2">
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((label, idx) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setDaysSel({ ...daysSel, [idx]: !daysSel[idx] })}
-                  className={`rounded-lg px-2 py-1 text-xs border ${daysSel[idx] ? "bg-white/20 border-white/30" : "bg-white/5 border-white/15 hover:bg-white/10"}`}
-                >
-                  {label}
-                </button>
-              ))}
+    <div className="grid md:grid-cols-[120px_1fr] gap-4">
+      {/* Agenda list */}
+      <div className="card p-4">
+        <div className="font-semibold">{date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>
+        <div className="mt-3 space-y-2">
+          {events.length === 0 && <div className="text-sm text-white/60">No events today.</div>}
+          {events.map(ev => (
+            <div key={ev.id} className={`rounded-xl border px-3 py-2 bg-gradient-to-br ${gradientFor(ev.type)}`}>
+              <div className="text-xs opacity-80">{fmtTime(ev.startISO)}–{fmtTime(ev.endISO)}</div>
+              <div className="font-medium">{ev.title}</div>
+              {ev.location && <div className="opacity-75">{ev.location}</div>}
+              {ev.notes && <div className="text-xs opacity-80 mt-1">{ev.notes}</div>}
+              <button className="btn-ghost text-xs mt-2" onClick={() => removeEvent(ev.id)}>Remove</button>
             </div>
-          </div>
-          <div>
-            <div className="text-sm text-white/80">Start</div>
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm text-white/80">Duration (min)</div>
-            <Input type="number" inputMode="numeric" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
-          </div>
-          <div className="flex items-end">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} />
-              Recurring weekly
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <div className="text-sm text-white/80">Notes (optional)</div>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-        </div>
-
-        <div className="pt-2">
-          <button className="btn" onClick={addToCalendar}>Add to calendar</button>
+          ))}
         </div>
       </div>
 
-      {/* MOBILE: simple list */}
-      <div className="md:hidden space-y-4">
-        {days.map((d, idx) => {
-          const evs = eventsFor(d);
+      {/* Timeline */}
+      <div className="relative card p-2 overflow-hidden" style={{ height: `${totalHeight}px` }}>
+        {hours.map((h,i) => {
+          const top = (h - DAY_START_HOUR) * 60 * PX_PER_MIN;
+          const label = new Date().setHours(h,0,0,0);
           return (
-            <div key={idx} className="card p-4">
-              <div className="font-semibold">{fmtDayShort(d)}</div>
-              <div className="mt-2 space-y-2">
-                {evs.length === 0 && <div className="text-sm text-white/50">No events</div>}
-                {evs.map((ev) => (
-                  <div key={ev.id} className={`rounded-xl border px-3 py-2 bg-gradient-to-br ${gradientFor(ev.type)}`}>
-                    <div className="text-xs opacity-80">{fmtTime(ev.startISO)}–{fmtTime(ev.endISO)}</div>
-                    <div className="font-medium">{ev.title}</div>
-                    {ev.notes && <div className="text-xs opacity-80 mt-1">{ev.notes}</div>}
-                    <button className="btn-ghost text-xs mt-2" onClick={() => removeEvent(ev.id)}>Remove</button>
-                  </div>
-                ))}
-              </div>
+            <div key={i} className="absolute left-0 right-0" style={{ top }}>
+              <div className="text-[10px] text-white/60 -translate-y-2">{new Date(label).toLocaleTimeString(undefined, { hour: "numeric" })}</div>
+              <div className="border-t border-white/10" />
+            </div>
+          );
+        })}
+        {events.map((ev, i) => {
+          const top = minutesFromStart(ev.startISO) * PX_PER_MIN;
+          const height = eventDurationMin(ev) * PX_PER_MIN;
+          return (
+            <div key={ev.id} className={`absolute left-2 right-2 rounded-xl border text-[12px] leading-tight shadow-lg bg-gradient-to-br ${gradientFor(ev.type)}`} style={{ top: Math.max(2, top) + (i%2)*3, height: Math.max(22, height) }}>
+              <div className="px-2 py-1.5 font-medium truncate">{ev.title}</div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      {/* DESKTOP: visual timetable */}
-      <div className="hidden md:block">
-        <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-2">
-          {/* Hour gutter */}
-          <div className="relative" style={{ height: `${totalHeight}px` }}>
-            {hours.map((h, i) => {
-              const top = (h - DAY_START_HOUR) * 60 * PX_PER_MIN;
-              const label = new Date().setHours(h, 0, 0, 0);
-              return (
-                <div key={i} className="absolute left-0 right-0" style={{ top }}>
-                  <div className="text-[10px] text-white/60 -translate-y-2">{new Date(label).toLocaleTimeString(undefined, { hour: "numeric" })}</div>
-                  <div className="border-t border-white/10" />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* 7 day columns */}
-          {days.map((d, colIdx) => {
-            const evs = eventsFor(d);
+/* ---- Week View (college timetable) ---- */
+function WeekView({
+  days, hours, totalHeight, eventsForDate, removeEvent,
+}: {
+  days: Date[];
+  hours: number[];
+  totalHeight: number;
+  eventsForDate: (d: Date) => CalEvent[];
+  removeEvent: (id: ID) => void;
+}) {
+  return (
+    <div className="hidden md:block">
+      <div className="grid grid-cols-[80px_repeat(7,1fr)] gap-2">
+        {/* Hour gutter */}
+        <div className="relative" style={{ height: `${totalHeight}px` }}>
+          {hours.map((h, i) => {
+            const top = (h - DAY_START_HOUR) * 60 * PX_PER_MIN;
+            const label = new Date().setHours(h, 0, 0, 0);
             return (
-              <div key={colIdx} className="relative card p-2 overflow-hidden" style={{ height: `${totalHeight}px` }}>
-                {/* Day header */}
-                <div className="absolute left-2 top-2 z-10 text-xs font-medium opacity-80">
-                  {fmtDayShort(d)}
-                </div>
-
-                {/* Hour lines (faint) */}
-                {hours.map((h, i) => {
-                  const top = (h - DAY_START_HOUR) * 60 * PX_PER_MIN;
-                  return <div key={i} className="absolute left-0 right-0 border-t border-white/5" style={{ top }} />;
-                })}
-
-                {/* Events */}
-                {evs.map((ev, i) => {
-                  const top = minutesFromStart(ev.startISO) * PX_PER_MIN;
-                  const height = eventDurationMin(ev) * PX_PER_MIN;
-                  const jitter = (i % 2) * 4;
-                  return (
-                    <div
-                      key={ev.id}
-                      title={ev.notes || ev.title}
-                      className={`absolute left-[6px] right-[6px] rounded-xl border text-[12px] leading-tight shadow-lg backdrop-blur-xs bg-gradient-to-br ${gradientFor(ev.type)}`}
-                      style={{ top: Math.max(2, top) + jitter, height: Math.max(22, height) }}
-                    >
-                      <div className="px-2 py-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="font-semibold truncate">{ev.title}</div>
-                          <button aria-label="Remove" className="text-white/70 hover:text-white text-xs" onClick={() => removeEvent(ev.id)}>×</button>
-                        </div>
-                        <div className="opacity-80">{fmtTime(ev.startISO)}–{fmtTime(ev.endISO)}</div>
-                        {ev.notes && <div className="opacity-70 mt-0.5 line-clamp-2">{ev.notes}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div key={i} className="absolute left-0 right-0" style={{ top }}>
+                <div className="text-[10px] text-white/60 -translate-y-2">{new Date(label).toLocaleTimeString(undefined, { hour: "numeric" })}</div>
+                <div className="border-t border-white/10" />
               </div>
             );
           })}
         </div>
+
+        {/* Day columns */}
+        {days.map((d, colIdx) => {
+          const evs = eventsForDate(d);
+          return (
+            <div key={colIdx} className="relative card p-2 overflow-hidden" style={{ height: `${totalHeight}px` }}>
+              <div className="absolute left-2 top-2 z-10 text-xs font-medium opacity-80">{fmtDayShort(d)}</div>
+              {hours.map((h, i) => {
+                const top = (h - DAY_START_HOUR) * 60 * PX_PER_MIN;
+                return <div key={i} className="absolute left-0 right-0 border-t border-white/5" style={{ top }} />;
+              })}
+              {evs.map((ev, i) => {
+                const top = minutesFromStart(ev.startISO) * PX_PER_MIN;
+                const height = eventDurationMin(ev) * PX_PER_MIN;
+                const jitter = (i % 2) * 4;
+                return (
+                  <div key={ev.id} className={`absolute left-[6px] right-[6px] rounded-xl border text-[12px] leading-tight shadow-lg backdrop-blur-xs bg-gradient-to-br ${gradientFor(ev.type)}`} style={{ top: Math.max(2, top) + jitter, height: Math.max(22, height) }}>
+                    <div className="px-2 py-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-semibold truncate">{ev.title}</div>
+                        <button aria-label="Remove" className="text-white/70 hover:text-white text-xs" onClick={() => removeEvent(ev.id)}>×</button>
+                      </div>
+                      <div className="opacity-80">{fmtTime(ev.startISO)}–{fmtTime(ev.endISO)}</div>
+                      {ev.location && <div className="opacity-75">{ev.location}</div>}
+                      {ev.notes && <div className="opacity-70 mt-0.5 line-clamp-2">{ev.notes}</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
-    </section>
+    </div>
+  );
+}
+
+/* ---- Month View (6-week grid) ---- */
+function MonthView({
+  monthCursor,
+  eventsForMonth,
+  onPickDay,
+}: {
+  monthCursor: Date;
+  eventsForMonth: (m: Date) => CalEvent[];
+  onPickDay: (d: Date) => void;
+}) {
+  const firstOfMonth = startOfMonth(monthCursor);
+  const firstWeekStart = startOfWeek(firstOfMonth);
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(firstWeekStart, i)); // 6 weeks
+  const monthEvents = eventsForMonth(firstOfMonth);
+
+  function eventsOn(d: Date) {
+    const ds = d.toISOString().slice(0,10);
+    return monthEvents.filter(e => e.startISO.slice(0,10) === ds);
+  }
+
+  return (
+    <div className="card p-4">
+      <div className="grid grid-cols-7 gap-2 text-xs text-white/60 mb-2">
+        {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((s)=> <div key={s} className="text-center">{s}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-2">
+        {cells.map((d, idx) => {
+          const inMonth = d.getMonth() === firstOfMonth.getMonth();
+          const todays = sameDay(d, new Date());
+          const evs = eventsOn(d);
+          return (
+            <button
+              key={idx}
+              onClick={() => onPickDay(d)}
+              className={`text-left rounded-xl p-2 border transition ${inMonth ? "border-white/10 bg-white/5 hover:bg-white/10" : "border-white/5 bg-white/2 opacity-60"} ${todays ? "ring-1 ring-white/60" : ""}`}
+            >
+              <div className="text-xs mb-1">{d.getDate()}</div>
+              <div className="space-y-1">
+                {evs.slice(0,3).map(ev => (
+                  <div key={ev.id} className={`truncate rounded-md px-2 py-0.5 text-[11px] border bg-gradient-to-br ${gradientFor(ev.type)}`}>{ev.title}</div>
+                ))}
+                {evs.length > 3 && <div className="text-[11px] text-white/70">+{evs.length-3} more</div>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Year View (12 months overview) ---- */
+function YearView({
+  yearCursor,
+  eventsForMonth,
+  onPickMonth,
+}: {
+  yearCursor: Date;
+  eventsForMonth: (m: Date) => CalEvent[];
+  onPickMonth: (d: Date) => void;
+}) {
+  const months = Array.from({length: 12}, (_,i)=> new Date(yearCursor.getFullYear(), i, 1));
+  return (
+    <div className="grid md:grid-cols-3 gap-4">
+      {months.map((m) => {
+        const count = eventsForMonth(m).length;
+        return (
+          <button key={m.toISOString()} onClick={() => onPickMonth(m)} className="card p-4 text-left hover:bg-white/10 transition">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">{m.toLocaleDateString(undefined, { month: "long" })}</div>
+              <span className="pill">{count}</span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-full bg-white/40" style={{ width: `${Math.min(100, (count/30)*100)}%` }} />
+            </div>
+            <div className="text-xs text-white/60 mt-1">events this month</div>
+          </button>
+        );
+      })}
+    </div>
   );
 }
