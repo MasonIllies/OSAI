@@ -1,19 +1,25 @@
+// App Router API route: handles POST /api/signup
 import { NextRequest, NextResponse } from "next/server";
+
+// Make sure this always runs on the server (no static optimization)
+export const dynamic = "force-dynamic"; // <-- ensures no prerender caching
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const email = String(form.get("email") || "").trim();
   const next = String(form.get("next") || "/modules");
 
-  // You can later validate/record email server-side. For now, accept anything non-empty.
+  // Require a value so users don't "submit nothing"
   if (!email) {
-    const url = new URL("/", req.url);
-    url.searchParams.set("err", "1");
-    return NextResponse.redirect(url);
+    const fail = new URL("/", req.url);
+    fail.searchParams.set("err", "1");
+    return NextResponse.redirect(fail);
   }
 
   const res = NextResponse.redirect(new URL(next, req.url));
-  // Minimal "session" — free plan
+
+  // Minimal free-plan "session"
   res.cookies.set("osai_auth", "1", {
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
@@ -28,7 +34,6 @@ export async function POST(req: NextRequest) {
     secure: true,
     httpOnly: false,
   });
-  // Optional: store email if you want the client to read it
   res.cookies.set("osai_email", email, {
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
@@ -38,4 +43,9 @@ export async function POST(req: NextRequest) {
   });
 
   return res;
+}
+
+// Optional: respond to accidental GETs so you see something useful in dev
+export async function GET(req: NextRequest) {
+  return new NextResponse("POST email to /api/signup", { status: 405 });
 }
