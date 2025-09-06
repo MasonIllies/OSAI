@@ -49,6 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link className="hover:text-white" href="/waitlist">Waitlist</Link>
               <Link className="hover:text-white" href="/faq">FAQ</Link>
               <Link className="hover:text-white" href="/contact">Contact</Link>
+              <Link className="hover:text-white" href="/roadmap">Roadmap</Link>
+              <Link className="hover:text-white" href="/changelog">Changelog</Link>
               <Link className="hover:text-white" href="/legal/terms">Terms</Link>
               <Link className="hover:text-white" href="/legal/privacy">Privacy</Link>
             </div>
@@ -58,3 +60,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
