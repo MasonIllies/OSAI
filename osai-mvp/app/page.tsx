@@ -1,4 +1,4 @@
-// Server Component: Landing = Sign up free
+// Server Component: Landing = Sign up free → /modules
 import React from "react";
 
 export default function Home({
@@ -11,7 +11,7 @@ export default function Home({
 
   return (
     <div className="min-h-screen bg-[radial-gradient(1000px_700px_at_70%_-10%,rgba(255,255,255,0.18),transparent),radial-gradient(800px_500px_at_-10%_30%,rgba(255,255,255,0.10),transparent)] text-white antialiased bg-black">
-      {/* NAV (lean, focused on signup) */}
+      {/* NAV */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-black/30 border-b border-white/10">
         <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -20,9 +20,7 @@ export default function Home({
             <span className="hidden md:inline text-white/50">— your personal OS</span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/pricing" className="hidden md:inline text-sm text-white/80 hover:text-white">
-              Pricing
-            </a>
+            <a href="/pricing" className="hidden md:inline text-sm text-white/80 hover:text-white">Pricing</a>
             <a href="/legal/terms" className="hidden md:inline text-sm text-white/60 hover:text-white">Terms</a>
             <a href="/legal/privacy" className="hidden md:inline text-sm text-white/60 hover:text-white">Privacy</a>
           </div>
@@ -50,6 +48,7 @@ export default function Home({
                 placeholder="you@yourdomain.com"
                 className="flex-1 rounded-full bg-white/5 border border-white/15 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-white/30"
                 autoComplete="email"
+                required
               />
               <button
                 type="submit"
