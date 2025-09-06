@@ -213,7 +213,7 @@ function parseIntent(raw: string, anchorWeekStart: Date) {
   // notes
   const notesBits: string[] = [];
   const afterComma = text.split("@")[0];
-  const hint = afterComma split(/,|–|-—/).slice(1).join(",").trim();
+  const hint = afterComma.split(/,|–|-—/).slice(1).join(",").trim(); // <-- FIXED
   if (hint) notesBits.push(hint);
   if (intent.with?.length) notesBits.push("With: " + intent.with.join(", "));
   if (intent.location) notesBits.push("Location: " + intent.location);
@@ -413,7 +413,7 @@ export default function CalendarPage() {
         <div className="max-h-60 overflow-auto px-4 pt-4" ref={scrollRef}>
           {chat.map((m, i) => (
             <div key={i} className={`mb-3 ${m.role === "user" ? "text-right" : "text-left"}`}>
-              <div className={`inline-block max-w-[90%] rounded-2xl px-3 py-2 text-sm ${m.role === "user" ? "bg-white/20" : "bg-white/8 border border-white/10"}`}>
+              <div className={`inline-block max-w[90%] rounded-2xl px-3 py-2 text-sm ${m.role === "user" ? "bg-white/20" : "bg-white/8 border border-white/10"}`}>
                 <div className="whitespace-pre-wrap">{m.text}</div>
                 {m.chips && (
                   <div className="mt-2 flex flex-wrap gap-2">
