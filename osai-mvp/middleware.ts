@@ -1,24 +1,26 @@
 import { NextResponse, NextRequest } from "next/server";
 
+// Routes that require "signed in" (free or paid)
 const PROTECTED = [/^\/calendar(?:\/|$)/, /^\/modules(?:\/|$)/, /^\/account(?:\/|$)/];
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
 
-  // public paths
+  // Public routes (landing, pricing, legal, assets, signup flow, APIs)
   const PUBLIC = [
-    /^\/$/, /^\/pricing(?:\/|$)/, /^\/signin(?:\/|$)/,
-    /^\/legal(?:\/|$)/, /^\/api(?:\/|$)/, /^\/_next\/.*/, /^\/favicon\.ico$/, /^\/images\/.*/
+    /^\/$/, /^\/pricing(?:\/|$)/, /^\/signin(?:\/|$)/, /^\/signup(?:\/|$)/,
+    /^\/legal(?:\/|$)/, /^\/api\/signup(?:\/|$)/, /^\/api(?:\/|$)/,
+    /^\/_next\/.*/, /^\/favicon\.ico$/, /^\/images\/.*/
   ];
   if (PUBLIC.some((re) => re.test(pathname))) return NextResponse.next();
 
-  // require cookie for protected
+  // Gate protected pages
   if (PROTECTED.some((re) => re.test(pathname))) {
-    const cookie = req.cookies.get("osai_auth")?.value;
-    if (cookie !== "1") {
+    const auth = req.cookies.get("osai_auth")?.value; // "1" if signed up
+    if (auth !== "1") {
       const url = req.nextUrl.clone();
-      url.pathname = "/signin";
-      url.searchParams.set("next", pathname);
+      url.pathname = "/";
+      if (pathname !== "/") url.searchParams.set("next", pathname + (search || ""));
       return NextResponse.redirect(url);
     }
   }
@@ -26,7 +28,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Run on everything so we can quickly decide
-export const config = {
-  matcher: ["/:path*"],
-};
+export const config = { matcher: ["/:path*"] };
