@@ -1,31 +1,11 @@
-"use client";
-
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-
-export default function SignInPage() {
-  const router = useRouter();
-  const sp = useSearchParams();
-  const next = sp.get("next") || "/calendar";
-  const [code, setCode] = useState("");
-  const [err, setErr] = useState("");
-
-  const EXPECTED = process.env.NEXT_PUBLIC_ACCESS_CODE || "";
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!EXPECTED) {
-      setErr("Missing NEXT_PUBLIC_ACCESS_CODE. Set it in Vercel → Settings → Environment Variables.");
-      return;
-    }
-    if (code.trim() !== EXPECTED) {
-      setErr("Wrong access code.");
-      return;
-    }
-    // 30-day cookie
-    document.cookie = `osai_auth=1; Max-Age=${60 * 60 * 24 * 30}; Path=/; SameSite=Lax; Secure`;
-    router.push(next);
-  }
+// Server Component: safe to prerender
+export default function SignInPage({
+  searchParams,
+}: {
+  searchParams: { next?: string; err?: string };
+}) {
+  const next = searchParams?.next || "/calendar";
+  const hasError = searchParams?.err === "1";
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
@@ -35,21 +15,32 @@ export default function SignInPage() {
           Enter your access code to continue.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+        <form method="POST" action="/api/signin" className="mt-6 space-y-3">
+          <input type="hidden" name="next" value={next} />
           <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
+            name="code"
             placeholder="Access code"
             className="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/30"
+            autoComplete="one-time-code"
           />
-          {err && <div className="text-sm text-red-300">{err}</div>}
-          <button type="submit" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold shadow-inner hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30">
+          {hasError && (
+            <div className="text-sm text-red-300">
+              Wrong access code or missing server config.
+            </div>
+          )}
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold shadow-inner hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
             Continue
           </button>
         </form>
 
         <div className="text-xs text-white/60 mt-4">
           You’ll be redirected to <span className="text-white/80">{next}</span>.
+        </div>
+        <div className="text-xs text-white/50 mt-2">
+          Tip: set <code>NEXT_PUBLIC_ACCESS_CODE</code> in Vercel → Environment Variables.
         </div>
       </div>
     </div>
