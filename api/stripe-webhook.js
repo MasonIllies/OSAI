@@ -1,3 +1,4 @@
+// /api/stripe-webhook.js
 import Stripe from "stripe";
 import { buffer } from "micro";
 import { getAdminSupabase } from "../lib/supabaseAdmin.js";
