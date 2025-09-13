@@ -196,7 +196,7 @@
     </div>
   </div>
 
-  <!-- Inline JS: video + dropdown + Supabase Auth + Stripe link redirect -->
+  <!-- Inline JS: video + dropdown + Supabase Auth + Username reservation + Stripe link -->
   <script type="module">
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
@@ -288,22 +288,24 @@
       document.addEventListener('click', e=>{ if(!dd.contains(e.target) && e.target !== input){ dd.classList.remove('open'); activeIndex=-1; }});
     })();
 
-    // Modal + Auth + Stripe hosted link
+    // Modal + Auth + Username reservation + Stripe hosted link
     (function(){
-      const openBtn    = document.getElementById('openSignup');
-      const sheet      = document.getElementById('sheet');
-      const emailSrc   = document.getElementById('emailInput');
+      const openBtn      = document.getElementById('openSignup');
+      const sheet        = document.getElementById('sheet');
+      const emailSrc     = document.getElementById('emailInput');
       const sheetDisplay = document.getElementById('sheetDisplay');
-      const sheetFirst = document.getElementById('sheetFirst');
-      const sheetLast  = document.getElementById('sheetLast');
-      const sheetEmail = document.getElementById('sheetEmail');
-      const sheetPass  = document.getElementById('sheetPass');
-      const sheetPass2 = document.getElementById('sheetPass2');
-      const errEmail   = document.getElementById('errEmail');
-      const errPass    = document.getElementById('errPass');
-      const payBtn     = document.getElementById('payBtn');
-      const form       = document.getElementById('sheetForm');
-      const authLink   = document.getElementById('authLink');
+      const sheetFirst   = document.getElementById('sheetFirst');
+      const sheetLast    = document.getElementById('sheetLast');
+      const sheetEmail   = document.getElementById('sheetEmail');
+      const sheetPass    = document.getElementById('sheetPass');
+      const sheetPass2   = document.getElementById('sheetPass2');
+      const errEmail     = document.getElementById('errEmail');
+      const errPass      = document.getElementById('errPass');
+      const payBtn       = document.getElementById('payBtn');
+      const form         = document.getElementById('sheetForm');
+      const authLink     = document.getElementById('authLink');
+      const authMsg      = document.getElementById('authMsg');
+
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       function setAuthUI(session){
@@ -362,21 +364,22 @@
       sheet.addEventListener('click', (e)=>{ if(e.target.matches('[data-close]')) closeSheet(); });
       document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !sheet.classList.contains('hidden')) closeSheet(); });
 
-      // Live validation
       [sheetDisplay, sheetFirst, sheetLast, sheetEmail, sheetPass, sheetPass2].forEach(el => {
         el.addEventListener('input', validate);
       });
 
-      // Sign up (or sign in if already registered), then go to hosted Stripe link
+      // Sign up (or sign in if already registered) → reserve username in DB → go to Stripe
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
         if(!validate()) return;
 
         payBtn.disabled = true; payBtn.textContent = "Creating…";
+        authMsg.textContent = "";
+
         const email = sheetEmail.value.trim();
         const pass  = sheetPass.value;
 
-        // Create Supabase account with metadata (names)
+        // 1) Create or sign-in Supabase user (email confirmations recommended OFF for instant flow)
         const { error: signUpErr } = await supabase.auth.signUp({
           email,
           password: pass,
@@ -389,31 +392,58 @@
             }
           }
         });
-
         if(signUpErr && !/already registered/i.test(signUpErr.message || "")){
           payBtn.disabled = false; payBtn.textContent = "PAY";
           errEmail.textContent = signUpErr.message || "Sign up failed.";
           return;
         }
         if(signUpErr && /already registered/i.test(signUpErr.message || "")){
-          // try sign-in if the user already exists
           const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
           if(signInErr){
             payBtn.disabled = false; payBtn.textContent = "PAY";
             errEmail.textContent = signInErr.message || "Sign in failed.";
             return;
           }
-          // optional: update metadata for existing users
-          await supabase.auth.updateUser({
-            data: {
-              display_name: sheetDisplay.value.trim(),
-              first_name: sheetFirst.value.trim(),
-              last_name: sheetLast.value.trim()
-            }
-          });
         }
 
-        // Proceed to Stripe hosted Checkout link
+        // 2) Reserve username (DB unique + reserved-name triggers enforce it)
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !user) {
+          payBtn.disabled = false; payBtn.textContent = "PAY";
+          authMsg.textContent = "Could not get session.";
+          return;
+        }
+
+        // Mirror DB normalization: lowercase, trim, only a-z 0-9 _
+        const wanted = sheetDisplay.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
+        if (wanted.length < 3) {
+          payBtn.disabled = false; payBtn.textContent = "PAY";
+          authMsg.textContent = "Username must be 3–20 chars (a–z, 0–9, _).";
+          return;
+        }
+
+        // Attempt insert (will fail if taken or reserved)
+        const { error: profileErr } = await supabase.from("profiles").insert({
+          id: user.id,
+          username: wanted,
+          display_name: sheetDisplay.value.trim(),
+          first_name: sheetFirst.value.trim(),
+          last_name: sheetLast.value.trim()
+        });
+
+        if (profileErr) {
+          payBtn.disabled = false; payBtn.textContent = "PAY";
+          const msg = profileErr.code === '23505'
+            ? "That username is already taken."
+            : (profileErr.code === '23514'
+              ? "That username is reserved. Try another."
+              : (profileErr.message || "Could not save profile.")
+            );
+          authMsg.textContent = msg;
+          return;
+        }
+
+        // 3) Proceed to Stripe hosted Checkout link
         payBtn.textContent = "Redirecting…";
         window.location.href = STRIPE_LINK;
       });
