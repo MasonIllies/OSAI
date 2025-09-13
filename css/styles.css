@@ -56,23 +56,22 @@ body{
 }
 
 /* =========================
-   HERO HEADLINE: TWO LINES
+   HERO HEADLINE (50% smaller)
    ========================= */
 .hero-title{
   margin: 10px 0 16px;
   font-weight: 800;
   line-height: 1.06;
-  font-size: 34px;                /* base for small screens */
+  font-size: 17px;                /* was 34px */
 }
 @media (min-width: 600px){
-  .hero-title{ font-size: 42px }
+  .hero-title{ font-size: 21px }  /* was 42px */
 }
 @media (min-width: 960px){
   .hero-title{
-    /* Bigger cap + longer measure -> wraps to TWO lines cleanly */
-    font-size: clamp(60px, 7vw, 80px);
+    font-size: clamp(30px, 3.5vw, 40px); /* was clamp(60px, 7vw, 80px) */
     line-height: 1.02;
-    max-width: 28ch;              /* longer measure = fewer lines */
+    max-width: 28ch;              /* keep same measure */
     text-wrap: balance;
   }
   .hero-title br{ display:none }  /* ignore manual <br> on desktop */
@@ -103,11 +102,11 @@ body{
   color:rgba(255,255,255,.92); font-weight:600; white-space:nowrap
 }
 
-/* ====== 16:9 VIDEO FRAME (no fixed height) ====== */
+/* True 16:9 video frame */
 .video-frame{
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;           /* true 16:9 */
+  aspect-ratio: 16 / 9;
   background: rgba(0,0,0,.40);
   border-radius: 12px;
   overflow: hidden;
