@@ -23,7 +23,7 @@ body{
 .hero{ padding: 44px 0 80px }
 .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
-/* Header — BIG brand + BIG login */
+/* Header — sizing refined ONLY */
 .glassbar{
   position: sticky; top: 0; z-index: 40;
   background: rgba(0,0,0,.30);
@@ -34,47 +34,52 @@ body{
 }
 .nav{
   display:flex; align-items:center; justify-content:space-between;
-  padding: 14px 0; gap: 16px;
+  padding: 10px 0;                /* was 14px -> tighter to balance bigger hero */
+  gap: 16px;
 }
 .brand{ text-decoration:none; color:var(--text); white-space:nowrap }
 .brand-text{
-  font-size: 32px;
+  font-size: 28px;                /* was 32px */
   line-height: 1.05;
-  letter-spacing:.12em;
+  letter-spacing:.10em;           /* was .12em */
   font-weight: 800;
-  text-transform: none;   /* <-- was uppercase; now allows small s */
-  opacity:.92;
+  text-transform: none;           /* keeps small s in MASIN’s */
+  opacity:.94;
 }
 .nav-link{ color: var(--muted); text-decoration:none; font-weight:800; white-space:nowrap }
-.nav-link.small{ font-size:32px }
+.nav-link.small{
+  font-size:20px;                 /* was 32px -> lighter visual weight vs brand */
+}
 .nav-link:hover{ color: var(--text) }
 
 @media (max-width: 520px){
   .brand-text{ font-size: 22px }
-  .nav-link.small{ font-size: 22px }
+  .nav-link.small{ font-size: 18px }
   .nav{ padding: 12px 0 }
 }
 
-/* Hero headline */
+/* Hero headline — ONLY this block changed below */
 .hero-title{
-  margin: 12px 0 16px;
+  margin: 10px 0 16px;
   font-weight: 800;
-  line-height: 1.08;
-  font-size: 36px;             /* Base for small screens */
+  line-height: 1.02;              /* tighter for punch */
+  font-size: 34px;                /* base for small screens (was 36px) */
 }
 @media (min-width: 600px){
-  .hero-title{ font-size: 44px }
+  .hero-title{ font-size: 42px }  /* a touch smaller mid-breakpoint to avoid 4–5 lines */
 }
 @media (min-width: 960px){
   .hero-title{
-    font-size: clamp(54px, 6vw, 64px);
-    line-height: 1.02;
-    max-width: 22ch;
+    /* Bigger cap, shorter measure -> clean 2 lines */
+    font-size: clamp(58px, 7.2vw, 72px);
+    line-height: 1.0;
+    max-width: 20ch;              /* was 22ch; forces two balanced lines */
     text-wrap: balance;
   }
   .hero-title br{ display:none }
 }
 
+/* BELOW THIS LINE — UNTOUCHED */
 .lede{ color: var(--muted); margin: 8px 0 8px; line-height: 1.45; }
 .lede .u{ text-decoration: underline; text-underline-offset: 3px }
 .tiny-note{ font-size: 13px; color: var(--muted); margin: 6px 0 18px; position: relative; }
