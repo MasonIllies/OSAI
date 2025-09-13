@@ -21,11 +21,72 @@
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
+    /* Elegant glass for video card */
+    .card.video{
+      position: relative;
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255,255,255,.035);                 /* very light milk */
+      border: 1px solid rgba(255,255,255,.10);            /* faint stroke */
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      box-shadow:
+        0 12px 40px rgba(0,0,0,.55),                      /* soft outer */
+        inset 0 0 0 1px rgba(255,255,255,.04);            /* micro inner */
+      overflow: hidden;
+    }
+    /* delicate gradient ring */
+    .card.video::before{
+      content:"";
+      position:absolute; inset:0; pointer-events:none;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0)) top/100% 1px no-repeat,
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0)) top/100% 100%;
+      mix-blend-mode: screen;
+      opacity:.6;
+    }
+    /* tiny top highlight for glass */
+    .card.video::after{
+      content:"";
+      position:absolute; left:1px; right:1px; top:1px; height:32px; border-radius: 15px;
+      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+      filter: blur(0.2px);
+      pointer-events:none;
+    }
+
     /* Video */
-    .video-frame{ aspect-ratio:16/9; width:100%; background:rgba(0,0,0,.40); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.1); position:relative; }
-    .play{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:transparent; color:rgba(255,255,255,.90); border:0; cursor:pointer; font-weight:700; }
-    .play-dot{ width:56px; height:56px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.95); color:#000; font-size:20px; font-weight:800; }
-    .play-label{ font-size:13px }
+    .video .intro{
+      position:absolute; top:14px; left:14px;
+      z-index: 2;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.45);
+    }
+    .video-frame{
+      aspect-ratio:16/9; width:100%;
+      background: rgba(255,255,255,.02);
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);            /* slimmer, softer */
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      position:relative;
+    }
+    .play{
+      position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:10px; background: transparent; color: rgba(255,255,255,.92); border:0; cursor:pointer; font-weight:700;
+      letter-spacing:.02em; transition: transform .15s ease;
+    }
+    .play:hover{ transform: translateY(-1px); }
+    .play-dot{
+      width: 56px; height: 56px; border-radius: 9999px;
+      display:flex; align-items:center; justify-content:center;
+      background:
+        radial-gradient(closest-side, rgba(255,255,255,.98), rgba(255,255,255,.92));
+      color:#000; font-size: 20px; font-weight: 800;
+      box-shadow:
+        0 6px 18px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.45) }
 
     /* ---- MODALS: solid, opaque, black ---- */
     .sheet{ position:fixed; inset:0; z-index:1000; }
@@ -34,8 +95,8 @@
       position:relative; z-index:1;
       margin: 8vh auto 0 auto; max-width:560px; border-radius:16px;
       padding:20px;
-      background:#000 !important;          /* solid black */
-      border:1px solid #222 !important;    /* subtle border */
+      background:#000 !important;
+      border:1px solid #222 !important;
       box-shadow:0 30px 80px rgba(0,0,0,.8);
     }
     .sheet h3{ margin:0; font-size:22px }
@@ -233,10 +294,7 @@
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    // Stripe: hosted link (no secrets in client)
     const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
-    // --------------------------------------
-
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -367,7 +425,7 @@
       });
     });
 
-    // ======= LOGIN FLOW (email + password) =======
+    // ======= LOGIN FLOW =======
     const loginForm = document.getElementById('loginForm');
     const loginEmail= document.getElementById('loginEmail');
     const loginPass = document.getElementById('loginPass');
@@ -467,7 +525,7 @@
       const email = sheetEmail.value.trim();
       const pass  = sheetPass.value;
 
-      // 1) Create or sign-in Supabase user (recommend Supabase email confirmations = OFF for instant)
+      // 1) Create or sign-in Supabase user
       const { error: signUpErr } = await supabase.auth.signUp({
         email,
         password: pass,
@@ -502,7 +560,6 @@
         return;
       }
 
-      // Mirror DB normalization: lowercase, trim, only a-z 0-9 _
       const wanted = sheetDisplay.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
       if (wanted.length < 3) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
