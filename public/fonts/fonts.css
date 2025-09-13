@@ -1,62 +1,30 @@
-/* Sansation webfont setup (local TTFs). Include this file from your HTML:
-   <link rel="stylesheet" href="/fonts/fonts.css">
-   Or if the fonts folder lives elsewhere, update the path accordingly.
-*/
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 300; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-LightItalic.ttf') format('truetype');
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
+  font-weight: 300; font-style: italic; font-display: swap;
 }
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-Italic.ttf') format('truetype');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
+  font-weight: 400; font-style: italic; font-display: swap;
 }
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+  font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Sansation';
   src: url('./Sansation-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
+  font-weight: 700; font-style: italic; font-display: swap;
 }
-
-/* Global apply (OPTION A) */
-:root {
-  --font-sans: 'Sansation', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji';
-}
-html, body {
-  font-family: var(--font-sans);
-}
-
-/* Targeted apply (OPTION B)
-   Add class="font-sansation" anywhere you want the font.
-*/
-.font-sansation { font-family: 'Sansation', var(--font-sans), sans-serif; }
-h1, h2, h3 { font-weight: 700; }
-small, .muted { font-weight: 300; }
-em, i { font-style: italic; }
