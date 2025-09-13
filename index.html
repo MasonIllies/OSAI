@@ -1,12 +1,105 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OSAI Landing</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OSAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Minimal system font stack; swap in your font later if you want -->
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="glassbar">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <!-- Default to an embedded SVG; swap to /assets/logo.png if you want -->
+        <img
+          id="logo"
+          alt="OSAI"
+          height="28"
+          src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'><rect width='160' height='40' rx='8' fill='black'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='Arial, Helvetica, sans-serif' font-size='16' letter-spacing='2'>OSAI</text></svg>"
+        />
+        <span>OSAI</span>
+      </a>
+      <a class="nav-link" href="https://www.osai.llc/login">Login</a> <!-- TODO: change if needed -->
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <section class="container hero">
+      <h1>$20/month. You get everything I ship.</h1>
+      <p class="sub">Straightforward. Early access. Continuous updates.</p>
+
+      <!-- Video card -->
+      <div class="card video">
+        <span class="pill">INTRODUCTION VIDEO</span>
+        <div class="video-frame" id="videoFrame">
+          <!-- Click-to-play overlay -->
+          <button id="playBtn" class="play">
+            <div class="play-icon">▶</div>
+            <span>PLAY</span>
+          </button>
+          <!-- iframe injected by JS on click -->
+        </div>
+      </div>
+
+      <!-- Feature pills -->
+      <div class="pills">
+        <span class="pill">CONTENT CREATION</span>
+        <span class="pill">FINANCIAL PLANNING</span>
+        <span class="pill">DAILY SCHEDULES</span>
+        <span class="pill">CREATE YOUR OWN UI</span>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta">
+        <div class="price">$20/month — everything I can develop. <span class="muted">Early access + updates.</span></div>
+        <div class="row">
+          <input id="emailInput" type="email" placeholder="you@example.com" />
+          <button id="openSignup" class="btn ghost">Sign up address</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">© <span id="year"></span> OSAI</footer>
+
+  <!-- Signup Sheet (modal) -->
+  <div id="sheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card card">
+      <div class="sheet-head">
+        <h3>Create your account</h3>
+        <button class="close" data-close>✕</button>
+      </div>
+      <form id="sheetForm" class="sheet-body">
+        <input id="sheetEmail" type="email" required placeholder="you@example.com" />
+        <select id="method">
+          <option value="card">Pay with card (Stripe) — $20/mo</option>
+          <option value="google">Continue with Google</option>
+          <option value="apple">Continue with Apple</option>
+          <option value="magic">Email magic link</option>
+        </select>
+
+        <div id="cardExtras" class="stack">
+          <input id="fullName" type="text" placeholder="Full name (optional)" />
+          <label class="agree">
+            <input id="agree" type="checkbox" />
+            I agree to the Terms and Privacy Policy.
+          </label>
+        </div>
+
+        <p id="error" class="error" hidden></p>
+
+        <button class="btn primary" type="submit" id="submitBtn">Continue</button>
+        <p class="hint">Card: opens Stripe. Google/Apple/Magic: opens auth.</p>
+      </form>
+    </div>
+  </div>
+
+  <script src="./js/app.js"></script>
+</body>
 </html>
