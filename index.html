@@ -31,7 +31,7 @@
     .sheet{ position:fixed; inset:0; z-index:1000; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.65); }
     .sheet-card{
-      position:relative; z-index:1;        /* keep content above backdrop */
+      position:relative; z-index:1;
       margin: 8vh auto 0 auto; max-width:560px; border-radius:16px;
       padding:20px;
       background:#000 !important;          /* solid black */
@@ -41,13 +41,15 @@
     .sheet h3{ margin:0; font-size:22px }
     .form-row{ display:flex; flex-direction:column; gap:8px; position:relative; }
     .form-row + .form-row{ margin-top:12px }
+    .row-split{ display:flex; gap:10px; flex-wrap:wrap }
+    .row-split .form-row{ flex:1; min-width: 180px }
     .label{ font-size:13px; color:rgba(255,255,255,.75) }
-    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; }
+    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; width:100%; }
     .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35) }
     .toggle-eye{
       position:absolute; right:8px; top:32px;
       border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px;
-      z-index:2; /* ensure above any backgrounds */
+      z-index:2;
     }
     .row-two{ display:flex; gap:10px; flex-wrap:wrap }
     .row-two .btn{ flex:1 }
@@ -146,12 +148,31 @@
       <div class="divider"></div>
 
       <form id="sheetForm" class="sheet-body" onsubmit="return false;">
+        <!-- Names -->
+        <div class="form-row">
+          <label class="label" for="sheetDisplay">Display name</label>
+          <input id="sheetDisplay" class="input" type="text" required placeholder="Your public name" autocomplete="nickname" />
+        </div>
+
+        <div class="row-split">
+          <div class="form-row">
+            <label class="label" for="sheetFirst">First name</label>
+            <input id="sheetFirst" class="input" type="text" required placeholder="First name" autocomplete="given-name" />
+          </div>
+          <div class="form-row">
+            <label class="label" for="sheetLast">Last name</label>
+            <input id="sheetLast" class="input" type="text" required placeholder="Last name" autocomplete="family-name" />
+          </div>
+        </div>
+
+        <!-- Email -->
         <div class="form-row">
           <label class="label" for="sheetEmail">Email</label>
           <input id="sheetEmail" class="input" type="email" required placeholder="you@example.com" autocomplete="email" />
           <div id="errEmail" class="error-line"></div>
         </div>
 
+        <!-- Passwords -->
         <div class="form-row">
           <label class="label" for="sheetPass">Password</label>
           <input id="sheetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
@@ -177,12 +198,12 @@
 
   <!-- Inline JS: video + dropdown + Supabase Auth + Stripe link redirect -->
   <script type="module">
-    // --------- SUPABASE (anon + URL only; safe on client) ----------
+    // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    // Stripe: use hosted link (no secrets on client)
+    // Stripe: hosted link (no secrets in client)
     const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
-    // ---------------------------------------------------------------
+    // --------------------------------------
 
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -272,6 +293,9 @@
       const openBtn    = document.getElementById('openSignup');
       const sheet      = document.getElementById('sheet');
       const emailSrc   = document.getElementById('emailInput');
+      const sheetDisplay = document.getElementById('sheetDisplay');
+      const sheetFirst = document.getElementById('sheetFirst');
+      const sheetLast  = document.getElementById('sheetLast');
       const sheetEmail = document.getElementById('sheetEmail');
       const sheetPass  = document.getElementById('sheetPass');
       const sheetPass2 = document.getElementById('sheetPass2');
@@ -295,22 +319,29 @@
         const { data: { session } } = await supabase.auth.getSession();
         setAuthUI(session);
       }
+      function nonEmpty(v){ return (v||"").trim().length >= 1; }
       function validate(){
         let ok = true;
+        if(!nonEmpty(sheetDisplay.value)) ok = false;
+        if(!nonEmpty(sheetFirst.value)) ok = false;
+        if(!nonEmpty(sheetLast.value)) ok = false;
+
         const e = (sheetEmail.value || '').trim();
         if(!emailRe.test(e)){ errEmail.textContent="Enter a valid email."; ok=false; } else { errEmail.textContent=""; }
+
         const p1 = sheetPass.value || '';
         const p2 = sheetPass2.value || '';
         if(p1.length < 8){ errPass.textContent="Password must be at least 8 characters."; ok=false; }
         else if(p1 !== p2){ errPass.textContent="Passwords don’t match."; ok=false; }
         else { errPass.textContent=""; }
+
         payBtn.disabled = !ok;
         return ok;
       }
       function openSheet(){
         sheet.classList.remove('hidden'); sheet.setAttribute('aria-hidden','false');
         if(sheetEmail && emailSrc && emailSrc.value.trim()){ sheetEmail.value = emailSrc.value.trim(); }
-        setTimeout(()=> sheetEmail?.focus(), 0);
+        setTimeout(()=> sheetDisplay?.focus(), 0);
         validate();
       }
       function closeSheet(){ sheet.classList.add('hidden'); sheet.setAttribute('aria-hidden','true'); }
@@ -331,9 +362,10 @@
       sheet.addEventListener('click', (e)=>{ if(e.target.matches('[data-close]')) closeSheet(); });
       document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !sheet.classList.contains('hidden')) closeSheet(); });
 
-      sheetEmail.addEventListener('input', validate);
-      sheetPass.addEventListener('input', validate);
-      sheetPass2.addEventListener('input', validate);
+      // Live validation
+      [sheetDisplay, sheetFirst, sheetLast, sheetEmail, sheetPass, sheetPass2].forEach(el => {
+        el.addEventListener('input', validate);
+      });
 
       // Sign up (or sign in if already registered), then go to hosted Stripe link
       form.addEventListener('submit', async (e)=>{
@@ -344,25 +376,44 @@
         const email = sheetEmail.value.trim();
         const pass  = sheetPass.value;
 
-        // Create Supabase account
+        // Create Supabase account with metadata (names)
         const { error: signUpErr } = await supabase.auth.signUp({
-          email, password: pass, options: { emailRedirectTo: window.location.origin }
+          email,
+          password: pass,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+              display_name: sheetDisplay.value.trim(),
+              first_name: sheetFirst.value.trim(),
+              last_name: sheetLast.value.trim()
+            }
+          }
         });
+
         if(signUpErr && !/already registered/i.test(signUpErr.message || "")){
           payBtn.disabled = false; payBtn.textContent = "PAY";
           errEmail.textContent = signUpErr.message || "Sign up failed.";
           return;
         }
         if(signUpErr && /already registered/i.test(signUpErr.message || "")){
+          // try sign-in if the user already exists
           const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
           if(signInErr){
             payBtn.disabled = false; payBtn.textContent = "PAY";
             errEmail.textContent = signInErr.message || "Sign in failed.";
             return;
           }
+          // optional: update metadata for existing users
+          await supabase.auth.updateUser({
+            data: {
+              display_name: sheetDisplay.value.trim(),
+              first_name: sheetFirst.value.trim(),
+              last_name: sheetLast.value.trim()
+            }
+          });
         }
 
-        // Redirect straight to your Stripe hosted Checkout link
+        // Proceed to Stripe hosted Checkout link
         payBtn.textContent = "Redirecting…";
         window.location.href = STRIPE_LINK;
       });
