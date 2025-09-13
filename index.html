@@ -24,7 +24,6 @@
   <!-- Header -->
   <header class="glassbar">
     <div class="container nav">
-      <!-- small “s” -->
       <a class="brand" href="/"><span class="brand-text">MASIN’s OSAI</span></a>
       <a class="nav-link small" href="https://www.osai.llc/login">Login</a>
     </div>
@@ -51,7 +50,14 @@
       <!-- Video card -->
       <div class="card video">
         <span class="pill intro">INTRODUCTION VIDEO</span>
-        <div class="video-frame" id="videoFrame">
+
+        <!-- Set your YouTube URL here later; defaults to Rickroll -->
+        <div
+          class="video-frame"
+          id="videoFrame"
+          data-video="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0"
+        >
+          <!-- Click-to-play overlay -->
           <button id="playBtn" class="play" aria-label="Play introduction video">
             <div class="play-dot">▶</div>
             <span class="play-label">PLAY</span>
@@ -59,7 +65,7 @@
         </div>
       </div>
 
-      <!-- Equal segments after video -->
+      <!-- Everything under the video stays the same -->
       <div class="after-video">
         <div class="signup">
           <div class="row centered">
@@ -85,7 +91,7 @@
 
   <footer class="container footer">© <span id="year"></span> OSAI</footer>
 
-  <!-- Modal -->
+  <!-- Modal (unchanged) -->
   <div id="sheet" class="sheet hidden" aria-hidden="true">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-card card">
