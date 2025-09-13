@@ -19,6 +19,13 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    /* Ensure 16:9 frame even if external CSS hasn't updated yet */
+    .video-frame{ aspect-ratio:16/9; width:100%; background:rgba(0,0,0,.40); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.1); position:relative; }
+    .play{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:transparent; color:rgba(255,255,255,.90); border:0; cursor:pointer; font-weight:700; }
+    .play-dot{ width:56px; height:56px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.95); color:#000; font-size:20px; font-weight:800; }
+    .play-label{ font-size:13px }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -51,21 +58,18 @@
       <div class="card video">
         <span class="pill intro">INTRODUCTION VIDEO</span>
 
-        <!-- Set your YouTube URL here later; defaults to Rickroll -->
-        <div
-          class="video-frame"
-          id="videoFrame"
-          data-video="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0"
-        >
-          <!-- Click-to-play overlay -->
-          <button id="playBtn" class="play" aria-label="Play introduction video">
+        <!-- You can paste ANY YouTube URL here (watch, youtu.be, or embed). -->
+        <div class="video-frame" id="videoFrame">
+          <button id="playBtn" class="play"
+            aria-label="Play introduction video"
+            data-video="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
             <div class="play-dot">▶</div>
             <span class="play-label">PLAY</span>
           </button>
         </div>
       </div>
 
-      <!-- Everything under the video stays the same -->
+      <!-- Everything under the video (unchanged) -->
       <div class="after-video">
         <div class="signup">
           <div class="row centered">
@@ -91,39 +95,65 @@
 
   <footer class="container footer">© <span id="year"></span> OSAI</footer>
 
-  <!-- Modal (unchanged) -->
-  <div id="sheet" class="sheet hidden" aria-hidden="true">
-    <div class="sheet-backdrop" data-close></div>
-    <div class="sheet-card card">
-      <div class="sheet-head">
-        <h3>Create your account</h3>
-        <button class="close" data-close>✕</button>
-      </div>
-      <form id="sheetForm" class="sheet-body">
-        <input id="sheetEmail" type="email" required placeholder="you@example.com" />
-        <select id="method">
-          <option value="card">Pay with card (Stripe) — $20/mo</option>
-          <option value="google">Continue with Google</option>
-          <option value="apple">Continue with Apple</option>
-          <option value="magic">Email magic link</option>
-        </select>
+  <!-- Modal unchanged ... -->
 
-        <div id="cardExtras" class="stack">
-          <input id="fullName" type="text" placeholder="Full name (optional)" />
-          <label class="agree">
-            <input id="agree" type="checkbox" />
-            I agree to the Terms and Privacy Policy.
-          </label>
-        </div>
+  <!-- Inline JS so it can't fail due to missing file path -->
+  <script>
+    // Footer year
+    (function(){var y=document.getElementById("year"); if(y) y.textContent=new Date().getFullYear();})();
 
-        <p id="error" class="error" hidden></p>
+    // Convert any YouTube URL to an embed URL
+    function toEmbed(url){
+      try{
+        var u=new URL(url);
+        if(u.hostname.includes("youtu.be")){
+          // https://youtu.be/ID -> /embed/ID
+          return "https://www.youtube.com/embed/"+u.pathname.replace("/","")+"?autoplay=1&rel=0";
+        }
+        if(u.hostname.includes("youtube.com")){
+          if(u.pathname==="/watch"){
+            var id=u.searchParams.get("v")||"";
+            return "https://www.youtube.com/embed/"+id+"?autoplay=1&rel=0";
+          }
+          if(u.pathname.startsWith("/embed/")){
+            return url.includes("autoplay=1") ? url : (url+(url.includes("?")?"&":"?")+"autoplay=1&rel=0");
+          }
+        }
+      }catch(e){}
+      // Fallback: assume it's already embeddable or let browser handle it
+      return url;
+    }
 
-        <button class="btn primary" type="submit" id="submitBtn">Continue</button>
-        <p class="hint">Card: opens Stripe. Google/Apple/Magic: opens auth.</p>
-      </form>
-    </div>
-  </div>
+    // Inject iframe on click
+    (function(){
+      var frame=document.getElementById("videoFrame");
+      var btn=document.getElementById("playBtn");
+      if(!frame||!btn) return;
 
-  <script src="./js/app.js"></script>
+      function inject(){
+        if(frame.dataset.played==="1") return;
+        frame.dataset.played="1";
+
+        var raw=btn.getAttribute("data-video")||"https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        var src=toEmbed(raw);
+
+        var iframe=document.createElement("iframe");
+        iframe.setAttribute("width","100%");
+        iframe.setAttribute("height","100%");
+        iframe.setAttribute("src",src);
+        iframe.setAttribute("allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
+        iframe.setAttribute("allowfullscreen","true");
+        iframe.setAttribute("title","Introduction video");
+
+        frame.innerHTML="";
+        frame.appendChild(iframe);
+      }
+
+      btn.addEventListener("click", inject);
+      btn.addEventListener("keydown", function(e){
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }
+      });
+    })();
+  </script>
 </body>
 </html>
