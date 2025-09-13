@@ -4,6 +4,9 @@
   --ring:rgba(255,255,255,.35); --text:#fff; --muted:rgba(255,255,255,.70);
   --shadow:0 18px 60px rgba(0,0,0,.75);
   --radius:14px; --pad:16px;
+
+  /* Equal vertical rhythm under the video */
+  --segment: 51px;  /* 15% less than 60px */
 }
 
 /* Base */
@@ -111,8 +114,12 @@ body{
 }
 .play-label{ font-size: 13px }
 
-/* SIGNUP block (centered under video) */
-.signup{ margin-top: 16px; text-align: center }
+/* ==== POST-VIDEO RHYTHM ==== */
+.after-video{ margin-top: var(--segment); }
+.after-video > * + *{ margin-top: var(--segment); } /* Equal spacing between each block */
+
+/* Signup */
+.signup{ text-align: center }
 .row{ display:flex; gap:10px; flex-wrap: wrap }
 .row.centered{ justify-content: center }
 input, select{
@@ -131,14 +138,13 @@ input:focus, select:focus{ box-shadow: 0 0 0 3px var(--ring) }
 .btn.ghost{ background: rgba(255,255,255,.06); color: var(--text) }
 .btn.ghost:hover{ background: var(--glassHover) }
 
-/* TRIPLED space between signup row and price line */
-.price{ margin-top: 60px; font-size: 18px; font-weight: 700 }
+/* Price line */
+.price{ font-size: 18px; font-weight: 700; text-align: center }
 .price .strong{ font-weight: 800 }
 .muted{ color: var(--muted) }
 
-/* Pills (more breathing room) */
-.pills{ display:flex; flex-wrap:wrap; gap:10px; padding-top: 20px }
-.pills.spaced{ margin-top: 8px }
+/* Pills */
+.pills{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center }
 .pill{ margin-bottom: 4px }
 
 /* Modal */
