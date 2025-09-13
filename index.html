@@ -131,6 +131,63 @@
     .email-hint{ color:rgba(255,255,255,.55); font-size:12px; margin-left:10px }
   </style>
 </head>
+
+<!-- ADDITIVE: Checkout bootstrap that can be left in place safely -->
+<script type="module">
+  // ===== ADDITIVE Stripe Checkout bootstrap (no removals) =====
+  const CHECKOUT_PRICE_ID = "price_XXXXXX"; // <-- set your real Stripe Price ID
+  const SUCCESS_URL = `${location.origin}/?success=1`;
+  const CANCEL_URL  = `${location.origin}/?canceled=1`;
+
+  const byId = (id) => document.getElementById(id);
+  const signupForm   = byId("signupForm")   || document.querySelector("form#signupForm");
+  const signupButton = byId("signupPayBtn") || document.querySelector("#signupPayBtn,[data-pay]");
+  const authMsgEl    = byId("authMsg")      || document.querySelector("#authMsg,.auth-msg");
+
+  function showAuthMsg(msg) {
+    if (authMsgEl) authMsgEl.textContent = msg;
+    else console.warn("[OSAI] ", msg);
+  }
+
+  async function createCheckoutSession() {
+    try {
+      const resp = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId: CHECKOUT_PRICE_ID,
+          successUrl: SUCCESS_URL,
+          cancelUrl: CANCEL_URL
+        })
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json?.url) {
+        throw new Error(json?.error || "Checkout init failed.");
+      }
+      window.location.href = json.url;
+    } catch (err) {
+      showAuthMsg(err.message || "Checkout error.");
+      if (signupButton) { signupButton.disabled = false; signupButton.textContent = "PAY"; }
+    }
+  }
+
+  if (signupForm && signupButton) {
+    signupForm.addEventListener("osai:checkout", (e) => {
+      e.preventDefault();
+      if (signupButton) { signupButton.disabled = true; signupButton.textContent = "Redirecting…"; }
+      createCheckoutSession();
+    });
+
+    signupButton.addEventListener("click", async (e) => {
+      if (signupButton.dataset.osaiHandled) return;
+      signupButton.dataset.osaiHandled = "1";
+      setTimeout(() => {
+        if (!document.hidden) createCheckoutSession();
+      }, 350);
+    }, { capture: true });
+  }
+</script>
+
 <body>
   <!-- Header -->
   <header class="glassbar">
@@ -587,7 +644,31 @@
         return;
       }
 
-      // 3) Proceed to Stripe hosted Checkout link
+      // ---- OSAI ADDITIVE: Prefer real Stripe Checkout Session (no removals) ----
+      await (async () => {
+        try {
+          const resp = await fetch("/api/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              priceId: "price_XXXXXX",                           // <-- replace with your real Stripe Price ID
+              successUrl: `${location.origin}/?success=1`,
+              cancelUrl:  `${location.origin}/?canceled=1`
+            })
+          });
+          const json = await resp.json();
+          if (!resp.ok || !json?.url) throw new Error(json?.error || "Checkout init failed.");
+          window.location.href = json.url;                      // Stripe-hosted Checkout
+        } catch (err) {
+          authMsg.textContent = err?.message || "Checkout error.";
+          payBtn.disabled = false; payBtn.textContent = "PAY";
+        }
+      })();
+      // We handled Checkout above. Keep your original lines intact below, but short-circuit now.
+      return;
+      // ---- end OSAI ADDITIVE ----
+
+      // 3) Proceed to Stripe hosted Checkout link (kept for completeness; NOT removed)
       payBtn.textContent = "Redirecting…";
       window.location.href = STRIPE_LINK;
     });
