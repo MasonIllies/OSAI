@@ -42,7 +42,7 @@ body{
   line-height: 1.05;
   letter-spacing:.12em;
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: none;   /* <-- was uppercase; now allows small s */
   opacity:.92;
 }
 .nav-link{ color: var(--muted); text-decoration:none; font-weight:800; white-space:nowrap }
