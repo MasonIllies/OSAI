@@ -130,4 +130,27 @@ input:focus, select:focus{ box-shadow: 0 0 0 3px var(--ring) }
 }
 .btn.ghost{ background: rgba(255,255,255,.06); color: var(--text) }
 .btn.ghost:hover{ background: var(--glassHover) }
-.p
+.price{ margin-top: 10px; font-size: 18px; font-weight: 700 }
+.price .strong{ font-weight: 800 }
+.muted{ color: var(--muted) }
+
+/* Pills (more breathing room now) */
+.pills{ display:flex; flex-wrap:wrap; gap:10px; padding-top: 20px }
+.pills.spaced{ margin-top: 8px }
+.pill{ margin-bottom: 4px }
+
+/* Modal */
+.sheet.hidden{ display: none }
+.sheet{ position: fixed; inset: 0; z-index: 50 }
+.sheet-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.5) }
+.sheet-card{
+  position: absolute; inset: 0; margin: auto; max-width: 420px; height: max-content;
+  border-radius: 16px; padding: 16px;
+}
+.sheet-head{ display:flex; align-items:center; justify-content:space-between; gap:8px }
+.sheet-head .close{ background: transparent; color: var(--muted); border: 0; font-size: 18px; cursor: pointer }
+.sheet-body{ display:flex; flex-direction: column; gap:10px; margin-top: 8px }
+.stack{ display:flex; flex-direction:column; gap:10px }
+.agree{ display:flex; align-items:center; gap:8px; color:rgba(255,255,255,.86); font-size: 14px }
+.error{ color:#ff8080; font-size: 14px; margin: 0 }
+.hint{ color: var(--muted); font-size: 12px; margin: 0 }
