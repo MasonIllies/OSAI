@@ -1,8 +1,8 @@
 :root{
-  --bg:#07080a; --border:rgba(255,255,255,.16);
-  --glass:rgba(0,0,0,.55); --glassHover:rgba(0,0,0,.7);
+  --bg:#07080a; --border:rgba(255,255,255,.12);
+  --glass:rgba(10,10,10,.54); --glassHover:rgba(12,12,12,.68);
   --ring:rgba(255,255,255,.35); --text:#fff; --muted:rgba(255,255,255,.70);
-  --shadow:0 18px 60px rgba(0,0,0,.75);
+  --shadow:0 18px 60px rgba(0,0,0,.65);
   --radius:14px; --pad:16px;
 
   /* Equal vertical rhythm under the video */
@@ -24,74 +24,88 @@ body{
 .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
 /* ===========================
-   Header — DARK BLACK GLASS
+   Header — ELEGANT BLACK GLASS
    =========================== */
 .glassbar{
   position: sticky; top: 0; z-index: 40;
-  /* deeper, inky glass with gradient and inner edge */
   background:
-    linear-gradient(180deg, rgba(0,0,0,.92), rgba(0,0,0,.86)) padding-box,
-    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0)) border-box;
-  border-bottom: 1px solid rgba(255,255,255,.12);
-  backdrop-filter: saturate(160%) blur(10px);
-  -webkit-backdrop-filter: saturate(160%) blur(10px);
-  box-shadow: 0 8px 28px rgba(0,0,0,.55);
-  contain: paint;
+    linear-gradient(180deg, rgba(0,0,0,.90), rgba(0,0,0,.84)) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0)) border-box;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: 0 10px 26px rgba(0,0,0,.45);
 }
 .nav{
   display:flex; align-items:center; justify-content:space-between;
   padding: 14px 0; gap: 16px;
 }
+
+/* Brand: refined glass capsule (Apple-y hairline + faint top sheen) */
 .brand{ text-decoration:none; color:var(--text); white-space:nowrap }
 .brand-text{
-  font-size: 32px;
-  line-height: 1.05;
-  letter-spacing:.12em;
-  font-weight: 800;
-  text-transform: uppercase;
-  opacity:.92;
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: .38rem .70rem;
+  font-size: 32px; line-height: 1.05; letter-spacing:.12em; font-weight:800; text-transform: uppercase;
+  color: rgba(255,255,255,.96);
+  border-radius: 9999px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04)) padding-box;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),        /* faint inner top highlight */
+    0 8px 18px rgba(0,0,0,.35);                  /* soft outer shadow */
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.brand-text:hover{
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  border-color: rgba(255,255,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 10px 22px rgba(0,0,0,.42);
+}
+.brand-text:active{ transform: translateY(1px) scale(.995) }
+.brand-text:focus-visible{
+  outline: 3px solid rgba(255,255,255,.45);
+  outline-offset: 3px;
 }
 
-/* Login — glass-outline pill, 25% smaller */
-.nav-link{
-  text-decoration:none; white-space:nowrap; color: var(--muted); font-weight:800;
-}
+/* Login — elegant glass-outline pill, 25% smaller than brand */
+.nav-link{ text-decoration:none; white-space:nowrap; color: var(--muted); font-weight:800 }
 .nav-link.small{
   display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
-  font-size: 24px;                 /* was 32px -> 25% smaller */
-  line-height: 1;
-  padding: .42rem .72rem;          /* tightened to fit smaller type */
+  font-size: 24px; line-height: 1;
+  padding: .36rem .64rem;
   border-radius: 9999px;
-  /* glass outline */
-  background: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06));
-  border: 1px solid rgba(255,255,255,.22);
+  color: rgba(255,255,255,.95);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035)) padding-box;
+  border: 1px solid rgba(255,255,255,.16);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.08),
-    0 6px 18px rgba(0,0,0,.35);
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 6px 16px rgba(0,0,0,.32);
   backdrop-filter: blur(8px) saturate(140%);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
-  transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease, color .18s ease;
-  color: rgba(255,255,255,.92);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
 }
 .nav-link.small:hover{
-  background: linear-gradient(rgba(255,255,255,.10), rgba(255,255,255,.10));
-  border-color: rgba(255,255,255,.30);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  border-color: rgba(255,255,255,.22);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.12),
-    0 10px 24px rgba(0,0,0,.45);
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 10px 22px rgba(0,0,0,.40);
   color: #fff;
 }
-.nav-link.small:active{
-  transform: translateY(1px) scale(.99);
-}
+.nav-link.small:active{ transform: translateY(1px) scale(.995) }
 .nav-link.small:focus-visible{
-  outline: 3px solid rgba(255,255,255,.5);
+  outline: 3px solid rgba(255,255,255,.45);
   outline-offset: 3px;
 }
 
 @media (max-width: 520px){
-  .brand-text{ font-size: 22px }
-  .nav-link.small{ font-size: 18px; padding: .36rem .64rem }
+  .brand-text{ font-size: 22px; padding: .30rem .56rem }
+  .nav-link.small{ font-size: 18px; padding: .30rem .52rem }
   .nav{ padding: 12px 0 }
 }
 
@@ -156,7 +170,7 @@ body{
 
 /* ==== POST-VIDEO RHYTHM ==== */
 .after-video{ margin-top: var(--segment); }
-.after-video > * + *{ margin-top: var(--segment); } /* Equal spacing between each block */
+.after-video > * + *{ margin-top: var(--segment); }
 
 /* Signup */
 .signup{ text-align: center }
