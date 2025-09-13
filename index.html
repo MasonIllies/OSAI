@@ -30,14 +30,19 @@
     /* Larger, more official pay modal */
     .sheet-card{ max-width:560px !important; padding:20px !important; }
     .sheet h3{ margin:0; font-size:22px }
-    .form-row{ display:flex; flex-direction:column; gap:8px }
+    .form-row{ display:flex; flex-direction:column; gap:8px; position:relative; }
     .form-row + .form-row{ margin-top:12px }
     .label{ font-size:13px; color:rgba(255,255,255,.75) }
-    .input{ border-radius:12px; padding:12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; }
+    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; }
     .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35) }
+    .toggle-eye{
+      position:absolute; right:8px; top:32px;
+      border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px;
+    }
     .row-two{ display:flex; gap:10px; flex-wrap:wrap }
     .row-two .btn{ flex:1 }
     .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
+    .info-line{ color:#8ab4ff; font-size:12px; min-height:16px }
     .btn.primary{ background:#fff; color:#000 }
     .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
     .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
@@ -143,34 +148,34 @@
         <div class="form-row">
           <label class="label" for="sheetPass">Password</label>
           <input id="sheetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="sheetPass" aria-label="Show password">Show</button>
         </div>
 
         <div class="form-row">
           <label class="label" for="sheetPass2">Confirm password</label>
           <input id="sheetPass2" class="input" type="password" required placeholder="Re-enter password" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="sheetPass2" aria-label="Show password">Show</button>
           <div id="errPass" class="error-line"></div>
         </div>
 
         <div class="row-two">
           <button id="payBtn" class="btn primary" type="submit" disabled>PAY</button>
-          <button id="googleBtn" class="btn ghost" type="button">Continue with Google</button>
         </div>
 
-        <p id="authMsg" class="subtle"></p>
+        <p id="authMsg" class="info-line"></p>
         <p class="subtle">You’ll be charged $20/month. Cancel anytime.</p>
       </form>
     </div>
   </div>
 
-  <!-- Inline JS: video + dropdown + Supabase Auth -->
+  <!-- Inline JS: video + dropdown + Supabase Auth (email/pass only) -->
   <script type="module">
     // --------- YOUR SUPABASE PROJECT ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    const STRIPE_CHECKOUT_URL = "/checkout"; // TODO: replace with your Checkout route
+    const STRIPE_CHECKOUT_URL = "/checkout"; // TODO: replace with your real Checkout route
     // ------------------------------------------
 
-    // Load Supabase (ESM from CDN)
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -258,7 +263,7 @@
       document.addEventListener('click', e=>{ if(!dd.contains(e.target) && e.target !== input){ dd.classList.remove('open'); activeIndex=-1; }});
     })();
 
-    // --- Open modal + Supabase Auth (email/pass & Google) ---
+    // --- Open modal + Supabase Auth (email/pass only) ---
     (function(){
       const openBtn    = document.getElementById('openSignup');
       const sheet      = document.getElementById('sheet');
@@ -269,7 +274,6 @@
       const errEmail   = document.getElementById('errEmail');
       const errPass    = document.getElementById('errPass');
       const payBtn     = document.getElementById('payBtn');
-      const googleBtn  = document.getElementById('googleBtn');
       const form       = document.getElementById('sheetForm');
       const authLink   = document.getElementById('authLink');
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -320,6 +324,19 @@
       sheetPass.addEventListener('input', validate);
       sheetPass2.addEventListener('input', validate);
 
+      // Show/Hide password toggles
+      document.querySelectorAll('.toggle-eye').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-toggle');
+          const input = document.getElementById(id);
+          if(!input) return;
+          const showing = input.type === 'text';
+          input.type = showing ? 'password' : 'text';
+          btn.textContent = showing ? 'Show' : 'Hide';
+          btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        });
+      });
+
       // Email+Password signup -> Supabase stores credentials
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
@@ -328,30 +345,30 @@
         const email = sheetEmail.value.trim();
         const pass  = sheetPass.value;
 
-        const { error } = await supabase.auth.signUp({
+        // Try sign up first
+        const { error: signUpErr } = await supabase.auth.signUp({
           email, password: pass,
           options: { emailRedirectTo: window.location.origin }
         });
 
-        if(error){
-          payBtn.disabled = false; payBtn.textContent = "PAY";
-          errEmail.textContent = error.message || "Sign up failed.";
-          return;
+        if(signUpErr){
+          // If user already exists, try sign in
+          if(/already registered/i.test(signUpErr.message || "")){
+            const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
+            if(signInErr){
+              payBtn.disabled = false; payBtn.textContent = "PAY";
+              errEmail.textContent = signInErr.message || "Sign in failed.";
+              return;
+            }
+          }else{
+            payBtn.disabled = false; payBtn.textContent = "PAY";
+            errEmail.textContent = signUpErr.message || "Sign up failed.";
+            return;
+          }
         }
 
         // Redirect to payment flow (replace with your real Checkout link/route)
         window.location.href = STRIPE_CHECKOUT_URL + "?email=" + encodeURIComponent(email);
-      });
-
-      // Google OAuth
-      googleBtn.addEventListener('click', async ()=>{
-        await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-            queryParams: { access_type: 'offline', prompt: 'consent' }
-          }
-        });
       });
 
       // auth state changes
