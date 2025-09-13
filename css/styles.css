@@ -69,9 +69,9 @@ body{
 }
 @media (min-width: 960px){
   .hero-title{
-    font-size: clamp(30px, 3.5vw, 40px); /* was clamp(60px, 7vw, 80px) */
+    font-size: clamp(30px, 3.5vw, 40px); /* 50% cut kept */
     line-height: 1.02;
-    max-width: 28ch;              /* keep same measure */
+    max-width: 36ch;             /* WIDER measure -> 2 lines */
     text-wrap: balance;
   }
   .hero-title br{ display:none }  /* ignore manual <br> on desktop */
