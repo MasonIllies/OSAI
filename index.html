@@ -1,13 +1,250 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OSAI Landing</title>
-    <link rel="stylesheet" href="/fonts/fonts.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MASIN’s OSAI — Landing</title>
+
+  <!-- Load Sansation fonts from /fonts/ (static, no build) -->
+  <link rel="stylesheet" href="/fonts/fonts.css" />
+
+  <style>
+    :root{
+      --bg:#07080a; --border:rgba(255,255,255,0.18); --glass:rgba(0,0,0,0.55);
+      --glassHover:rgba(0,0,0,0.7); --ring:rgba(255,255,255,0.35);
+      --shadow:0 18px 60px rgba(0,0,0,0.75);
+    }
+    html,body{ height:100%; background:var(--bg) }
+    body{
+      margin:0; color:#fff;
+      font-family:'Sansation', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    a{ color:#a78bfa; text-decoration:none } a:hover{ text-decoration:underline }
+    ::selection{ background:rgba(255,255,255,0.15) }
+    .noise{ position:fixed; inset:0; pointer-events:none; opacity:.05;
+      background-image:radial-gradient(rgba(255,255,255,0.08) 1px,transparent 1.6px);
+      background-size:3px 3px }
+    .beams{ position:fixed; inset:0; pointer-events:none; opacity:.6; filter:saturate(60%);
+      background:
+       radial-gradient(600px 260px at 20% -80px, rgba(255,255,255,0.12), transparent 60%),
+       radial-gradient(700px 340px at 110% 10%, rgba(255,255,255,0.10), transparent 65%);
+    }
+
+    .container{ max-width:768px; margin:0 auto; padding:0 16px }
+    .glassbar{ position:sticky; top:0; z-index:40; background:rgba(0,0,0,0.35);
+      backdrop-filter:saturate(140%) blur(8px); -webkit-backdrop-filter:saturate(140%) blur(8px);
+      border-bottom:1px solid var(--border) }
+    @supports not ((backdrop-filter: blur(1px))) { .glassbar{ background:rgba(0,0,0,0.6) } }
+
+    .header{ display:flex; align-items:center; justify-content:space-between; padding:20px 0 }
+    .brand { font-size:calc(0.875rem + 5px); letter-spacing:.12em; color:rgba(255,255,255,.8) }
+    .logo { height:40px; width:auto; display:block; margin-right:8px; }
+    .brandwrap{ display:flex; align-items:center; gap:8px }
+
+    .h1{ font-size:21px; line-height:1.15; font-weight:700; margin:0 0 10px }
+    @media(min-width:768px){ .h1{ font-size:33px } }
+
+    .card{ position:relative; border-radius:16px; padding:12px;
+      background:linear-gradient(var(--glass),var(--glass)) padding-box,
+                 linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)) border-box;
+      border:1px solid transparent; box-shadow:var(--shadow) }
+    .card-hover{ transition:transform .25s ease, box-shadow .25s ease }
+    .card-hover:hover{ transform:translateY(-2px); box-shadow:0 22px 70px rgba(0,0,0,0.9) }
+
+    .pill{ display:inline-block; border-radius:9999px; border:1px solid rgba(255,255,255,0.2);
+      background:rgba(0,0,0,0.55); padding:.4rem .75rem; font-size:.72rem; letter-spacing:.06em;
+      color:rgba(255,255,255,0.9) }
+    .intro-tag{ position:absolute; top:12px; left:12px }
+    .grid-pills{ display:flex; flex-wrap:wrap; gap:8px; padding-top:12px }
+
+    input[type=email]{
+      width:100%; max-width:420px; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+      padding:12px 16px; outline:0; background:#fff; color:#000; font-size:16px;
+    }
+    input[type=email]:focus{ box-shadow:0 0 0 3px var(--ring) }
+
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      border-radius:9999px; border:1px solid rgba(255,255,255,0.25);
+      padding:.75rem 1rem; font-weight:600; background:transparent;
+      color:#fff; cursor:pointer; transition:background .2s ease, transform .2s ease, box-shadow .2s ease }
+    .btn:hover{ background:var(--glassHover) }
+
+    .cta-wrap{ display:flex; flex-direction:column; gap:8px }
+    @media(min-width:768px){ .cta-row{ display:flex; gap:10px; align-items:center } }
+
+    /* Sheet (signup) */
+    .sheet-wrap{ position:fixed; inset:0; z-index:50; display:none }
+    .sheet-wrap.open{ display:block }
+    .sheet-dim{ position:absolute; inset:0; background:rgba(0,0,0,0.5) }
+    .sheet{ position:absolute; left:0; right:0; bottom:0; margin:0 auto; max-width:560px;
+      border-radius:18px 18px 0 0; padding:16px; background:linear-gradient(var(--glass),var(--glass)) padding-box,
+      linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)) border-box;
+      border:1px solid transparent; box-shadow:var(--shadow) }
+    @media(min-width:768px){ .sheet{ top:50%; transform:translateY(-50%); border-radius:18px } }
+
+    .row{ margin:10px 0 }
+    .select, .text{ width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+      padding:12px 16px; background:#fff; color:#000; font-size:16px; }
+
+    footer{ color:rgba(255,255,255,0.5); font-size:14px; padding:0 0 40px }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="beams"></div>
+
+  <div class="glassbar">
+    <div class="container header">
+      <a href="/" class="brandwrap">
+        <img class="logo" alt="OSAI logo"
+             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbLAAAABHNCSVQICAgIfAhkiAAAIABJREFUeJzt3Xl8FFX+//HPyUliSGCQpCQQEC4xK6Jp1iYyKi8bqH9Xq9XLrtVWqtWpf1QvVqtWqf1cXW6rNWrXgUqFZq1S1i7gkQkxLkZB4JgshmTzP8z3kk5mBGCS/fOd3P93vfM+7/nkFjDGmKIoiqIoiqIoii..." />
+        <span class="brand">MASIN’s OSAI</span>
+      </a>
+      <a id="login-link" class="brand" style="font-size:14px; letter-spacing:normal; color:rgba(255,255,255,.7)" href="#">Login</a>
+    </div>
+  </div>
+
+  <main class="container" style="padding:24px 0 40px">
+    <h1 class="h1">Not just another shit app built to farm your data and trick you into forgetting your subscription.</h1>
+    <p style="color:rgba(255,255,255,.8)">
+      Give me $20 a month and I’ll give you <span style="text-decoration:underline; text-underline-offset:4px">everything</span> I can develop.<br />
+      Owned–created, designed, developed, marketed, and sold by me—<br /><br />
+      Welcome to OSAI. Nice to meet you.
+    </p>
+    <p style="color:rgba(255,255,255,.6); font-style:italic">p.s. Fuck you Google.</p>
+
+    <div class="card card-hover">
+      <div class="pill intro-tag">INTRODUCTION VIDEO</div>
+      <div style="position:relative; height:320px; background:rgba(0,0,0,.4); border-radius:12px; overflow:hidden">
+        <button id="play" class="btn" aria-label="Play introduction video"
+                style="position:absolute; inset:0; margin:auto; height:64px; width:64px; border-radius:999px; background:#fff; color:#000; font-size:24px; font-weight:700; display:flex; align-items:center; justify-content:center">
+          ▶
+        </button>
+        <iframe id="yt" title="OSAI Introduction" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
+                style="display:none; position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:12px"></iframe>
+      </div>
+    </div>
+
+    <div class="cta-wrap" style="padding-top:16px">
+      <div class="cta-row">
+        <input id="email" type="email" placeholder="sou@example.com" />
+        <button id="create" class="btn">Create account</button>
+      </div>
+      <div style="font-size:20px; font-weight:700">
+        $20/month — everything I can develop. <span style="font-size:16px; color:rgba(255,255,255,.6)">Early access + updates.</span>
+      </div>
+    </div>
+
+    <div class="grid-pills">
+      <span class="pill">CONTENT CREATION</span>
+      <span class="pill">FINANCIAL PLANNING</span>
+      <span class="pill">DAILY SCHEDULES</span>
+      <span class="pill">CREATE YOUR OWN UI</span>
+    </div>
+  </main>
+
+  <footer class="container">© <span id="yr"></span> OSAI</footer>
+
+  <!-- Signup Sheet (opens for Stripe/Google/Apple/Magic if you want it) -->
+  <div id="sheet" class="sheet-wrap" aria-hidden="true">
+    <div class="sheet-dim" data-close></div>
+    <div class="sheet">
+      <div style="display:flex; align-items:center; justify-content:space-between">
+        <h3 style="margin:0; font-size:18px; font-weight:700">Create your account</h3>
+        <button class="btn" data-close style="border:0; padding:.3rem .6rem">✕</button>
+      </div>
+
+      <div class="row">
+        <input id="sheet-email" class="text" type="email" placeholder="sou@example.com" />
+      </div>
+      <div class="row">
+        <select id="method" class="select">
+          <option value="card">Pay with card (Stripe) — $20/mo</option>
+          <option value="google">Continue with Google</option>
+          <option value="apple">Continue with Apple</option>
+          <option value="magic">Email magic link</option>
+        </select>
+      </div>
+      <div id="terms" class="row" style="display:block">
+        <label style="font-size:14px; color:rgba(255,255,255,.85)">
+          <input id="agree" type="checkbox" /> I agree to the Terms and Privacy Policy.
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="sheet-continue" class="btn" style="width:100%; background:#fff; color:#000">Continue</button>
+      </div>
+      <p style="font-size:12px; color:rgba(255,255,255,.6)">Card: redirects to Stripe. Google/Apple/Magic: goes to app auth.</p>
+    </div>
+  </div>
+
+  <script>
+    // ---- CONFIG: set your app endpoints here
+    const APP_DOMAIN = 'https://app.osai.llc';  // your app host (auth lives here)
+    const APP_LOGIN_URL = APP_DOMAIN + '/login';
+    const APP_SIGNUP_URL = APP_DOMAIN + '/signup';
+    const STRIPE_CHECKOUT_URL = '#'; // set your real Stripe Checkout when ready
+
+    // header links
+    document.getElementById('login-link').href = APP_LOGIN_URL;
+
+    // year
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    // video
+    document.getElementById('play').addEventListener('click', () => {
+      const yt = document.getElementById('yt');
+      yt.src = 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1&playsinline=1&autoplay=1';
+      yt.style.display = 'block';
+      document.getElementById('play').style.display = 'none';
+    });
+
+    // create account (simple redirect with email prefill)
+    document.getElementById('create').addEventListener('click', () => {
+      const email = document.getElementById('email').value.trim();
+      const url = new URL(APP_SIGNUP_URL);
+      if (email) url.searchParams.set('email', email);
+      window.location.href = url.toString();
+    });
+
+    // optional: advanced signup sheet (Stripe/Google/Apple/Magic)
+    const sheet = document.getElementById('sheet');
+    const openSheet = () => { sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false'); };
+    const closeSheet = () => { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); };
+    document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeSheet));
+
+    // sync email into sheet
+    document.getElementById('email').addEventListener('input', (e) => {
+      document.getElementById('sheet-email').value = e.target.value;
+    });
+
+    // continue in sheet
+    document.getElementById('sheet-continue').addEventListener('click', () => {
+      const email = document.getElementById('sheet-email').value.trim();
+      const method = document.getElementById('method').value;
+      if (method === 'card') {
+        // require terms for card
+        if (!document.getElementById('agree').checked) {
+          alert('Please agree to the Terms to continue.');
+          return;
+        }
+        window.open(STRIPE_CHECKOUT_URL, '_blank');
+        return;
+      }
+      const base = APP_DOMAIN.replace(/\/$/, '');
+      const path =
+        method === 'google' ? '/auth/google' :
+        method === 'apple'  ? '/auth/apple'  :
+        /* magic */           '/auth/magic';
+      const url = new URL(base + path);
+      if (method === 'magic') url.searchParams.set('email', email);
+      else url.searchParams.set('prefill_email', email);
+      window.open(url.toString(), '_blank');
+    });
+
+    // if you want a button to open the sheet instead of direct redirect, call openSheet()
+    // e.g., document.getElementById('create').addEventListener('click', openSheet);
+  </script>
+</body>
 </html>
