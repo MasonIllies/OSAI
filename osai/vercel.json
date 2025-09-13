@@ -1,9 +1,0 @@
-{
-  "builds": [
-    { "src": "osai/index.html", "use": "@vercel/static" },
-    { "src": "osai/fonts/**",   "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/osai/$1" }
-  ]
-}
