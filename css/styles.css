@@ -36,7 +36,7 @@ body{
 }
 .brand{ text-decoration:none; color:var(--text); white-space:nowrap }
 .brand-text{
-  font-size: 32px;              /* DOUBLED */
+  font-size: 32px;
   line-height: 1.05;
   letter-spacing:.12em;
   font-weight: 800;
@@ -44,10 +44,9 @@ body{
   opacity:.92;
 }
 .nav-link{ color: var(--muted); text-decoration:none; font-weight:800; white-space:nowrap }
-.nav-link.small{ font-size:32px }  /* DOUBLED to match header weight */
+.nav-link.small{ font-size:32px }
 .nav-link:hover{ color: var(--text) }
 
-/* Make sure it doesn’t overpower on very small screens */
 @media (max-width: 520px){
   .brand-text{ font-size: 22px }
   .nav-link.small{ font-size: 22px }
@@ -57,11 +56,27 @@ body{
 /* Hero typography */
 .hero-title{
   margin: 12px 0 16px;
-  line-height: 1.08;
   font-weight: 800;
+  line-height: 1.05;
+  /* Mobile-first: allow manual <br> line breaks */
   font-size: 42px;
 }
-@media (min-width: 760px){ .hero-title{ font-size: 54px } }
+@media (min-width: 760px){
+  .hero-title{ font-size: 54px }
+}
+
+/* --- TWO-LINE DESKTOP RULES --- */
+@media (min-width: 960px){
+  /* Hide the manual <br> so browser can wrap naturally */
+  .hero-title br{ display:none; }
+  .hero-title{
+    /* balance lines & constrain measure so it wraps to two lines */
+    text-wrap: balance;
+    max-width: 22ch;           /* tweak this if you want slightly longer/shorter lines */
+    font-size: clamp(56px, 6vw, 64px);
+    line-height: 1.02;
+  }
+}
 
 .lede{
   color: var(--muted);
