@@ -27,7 +27,7 @@
     .play-dot{ width:56px; height:56px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.95); color:#000; font-size:20px; font-weight:800; }
     .play-label{ font-size:13px }
 
-    /* ---- AUTH MODAL: solid, opaque, black ---- */
+    /* ---- MODALS: solid, opaque, black ---- */
     .sheet{ position:fixed; inset:0; z-index:1000; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.65); }
     .sheet-card{
@@ -39,6 +39,9 @@
       box-shadow:0 30px 80px rgba(0,0,0,.8);
     }
     .sheet h3{ margin:0; font-size:22px }
+    .sheet .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
+    .sheet .muted-link{ color:rgba(255,255,255,.7); font-size:13px; text-decoration:underline; cursor:pointer }
+
     .form-row{ display:flex; flex-direction:column; gap:8px; position:relative; }
     .form-row + .form-row{ margin-top:12px }
     .row-split{ display:flex; gap:10px; flex-wrap:wrap }
@@ -55,9 +58,8 @@
     .row-two .btn{ flex:1 }
     .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
     .info-line{ color:#8ab4ff; font-size:12px; min-height:16px }
-    .btn.primary{ background:#fff; color:#000 }
+    .btn.primary{ background:#fff; color:#000; border-radius:12px; padding:.9rem 1.1rem; border:1px solid rgba(255,255,255,.22) }
     .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
-    .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
 
     /* Email dropdown */
     .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
@@ -136,8 +138,37 @@
 
   <footer class="container footer">© <span id="year"></span> OSAI</footer>
 
-  <!-- AUTH / PAY SHEET -->
-  <div id="sheet" class="sheet hidden" aria-hidden="true">
+  <!-- LOGIN SHEET -->
+  <div id="loginSheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <h3>Log in</h3>
+        <button class="close" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="divider"></div>
+
+      <form id="loginForm" class="sheet-body" onsubmit="return false;">
+        <div class="form-row">
+          <label class="label" for="loginEmail">Email</label>
+          <input id="loginEmail" class="input" type="email" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-row">
+          <label class="label" for="loginPass">Password</label>
+          <input id="loginPass" class="input" type="password" required placeholder="Your password" autocomplete="current-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="loginPass" aria-label="Show password">Show</button>
+        </div>
+        <div class="row-two">
+          <button id="loginBtn" class="btn primary" type="submit">Login</button>
+        </div>
+        <p id="loginMsg" class="error-line"></p>
+        <p class="muted-link" id="toSignup">Need an account? Create one</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- CREATE ACCOUNT / PAY SHEET -->
+  <div id="signupSheet" class="sheet hidden" aria-hidden="true">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-card">
       <div class="sheet-head">
@@ -191,12 +222,13 @@
         </div>
 
         <p id="authMsg" class="info-line"></p>
+        <p class="muted-link" id="toLogin">Already have an account? Log in</p>
         <p class="subtle">You’ll be charged $20/month. Cancel anytime.</p>
       </form>
     </div>
   </div>
 
-  <!-- Inline JS: video + dropdown + Supabase Auth + Username reservation + Stripe link -->
+  <!-- Inline JS -->
   <script type="module">
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
@@ -288,169 +320,224 @@
       document.addEventListener('click', e=>{ if(!dd.contains(e.target) && e.target !== input){ dd.classList.remove('open'); activeIndex=-1; }});
     })();
 
-    // Modal + Auth + Username reservation + Stripe hosted link
-    (function(){
-      const openBtn      = document.getElementById('openSignup');
-      const sheet        = document.getElementById('sheet');
-      const emailSrc     = document.getElementById('emailInput');
-      const sheetDisplay = document.getElementById('sheetDisplay');
-      const sheetFirst   = document.getElementById('sheetFirst');
-      const sheetLast    = document.getElementById('sheetLast');
-      const sheetEmail   = document.getElementById('sheetEmail');
-      const sheetPass    = document.getElementById('sheetPass');
-      const sheetPass2   = document.getElementById('sheetPass2');
-      const errEmail     = document.getElementById('errEmail');
-      const errPass      = document.getElementById('errPass');
-      const payBtn       = document.getElementById('payBtn');
-      const form         = document.getElementById('sheetForm');
-      const authLink     = document.getElementById('authLink');
-      const authMsg      = document.getElementById('authMsg');
+    // ========== SESSION/UI ==========
+    const authLink   = document.getElementById('authLink');
+    const loginSheet = document.getElementById('loginSheet');
+    const signupSheet= document.getElementById('signupSheet');
 
-      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function openSheet(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
+    function closeSheet(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
 
-      function setAuthUI(session){
-        if(session?.user){
-          authLink.textContent = "Logout";
-          authLink.onclick = async (e)=>{ e.preventDefault(); await supabase.auth.signOut(); setAuthUI(null); };
-        }else{
-          authLink.textContent = "Login";
-          authLink.onclick = (e)=>{ e.preventDefault(); openSheet(); };
-        }
+    function setAuthUI(session){
+      if(session?.user){
+        authLink.textContent = "Logout";
+        authLink.onclick = async (e)=>{ e.preventDefault(); await supabase.auth.signOut(); setAuthUI(null); };
+      }else{
+        authLink.textContent = "Login";
+        authLink.onclick = (e)=>{ e.preventDefault(); openSheet(loginSheet); };
       }
-      async function refreshSessionUI(){
-        const { data: { session } } = await supabase.auth.getSession();
-        setAuthUI(session);
+    }
+    async function refreshSessionUI(){
+      const { data: { session } } = await supabase.auth.getSession();
+      setAuthUI(session);
+    }
+
+    // Close handlers for both modals
+    document.addEventListener('click', (e)=>{
+      if(e.target.matches('#loginSheet [data-close]'))  closeSheet(loginSheet);
+      if(e.target.matches('#signupSheet [data-close]')) closeSheet(signupSheet);
+    });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){
+        if(!loginSheet.classList.contains('hidden'))  closeSheet(loginSheet);
+        if(!signupSheet.classList.contains('hidden')) closeSheet(signupSheet);
       }
-      function nonEmpty(v){ return (v||"").trim().length >= 1; }
-      function validate(){
-        let ok = true;
-        if(!nonEmpty(sheetDisplay.value)) ok = false;
-        if(!nonEmpty(sheetFirst.value)) ok = false;
-        if(!nonEmpty(sheetLast.value)) ok = false;
+    });
 
-        const e = (sheetEmail.value || '').trim();
-        if(!emailRe.test(e)){ errEmail.textContent="Enter a valid email."; ok=false; } else { errEmail.textContent=""; }
-
-        const p1 = sheetPass.value || '';
-        const p2 = sheetPass2.value || '';
-        if(p1.length < 8){ errPass.textContent="Password must be at least 8 characters."; ok=false; }
-        else if(p1 !== p2){ errPass.textContent="Passwords don’t match."; ok=false; }
-        else { errPass.textContent=""; }
-
-        payBtn.disabled = !ok;
-        return ok;
-      }
-      function openSheet(){
-        sheet.classList.remove('hidden'); sheet.setAttribute('aria-hidden','false');
-        if(sheetEmail && emailSrc && emailSrc.value.trim()){ sheetEmail.value = emailSrc.value.trim(); }
-        setTimeout(()=> sheetDisplay?.focus(), 0);
-        validate();
-      }
-      function closeSheet(){ sheet.classList.add('hidden'); sheet.setAttribute('aria-hidden','true'); }
-
-      document.querySelectorAll('.toggle-eye').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const id = btn.getAttribute('data-toggle');
-          const input = document.getElementById(id);
-          if(!input) return;
-          const showing = input.type === 'text';
-          input.type = showing ? 'password' : 'text';
-          btn.textContent = showing ? 'Show' : 'Hide';
-          btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-        });
+    // Toggle eye buttons (all)
+    document.querySelectorAll('.toggle-eye').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-toggle');
+        const input = document.getElementById(id);
+        if(!input) return;
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.textContent = showing ? 'Show' : 'Hide';
+        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
       });
+    });
 
-      openBtn.addEventListener('click', openSheet);
-      sheet.addEventListener('click', (e)=>{ if(e.target.matches('[data-close]')) closeSheet(); });
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !sheet.classList.contains('hidden')) closeSheet(); });
+    // ======= LOGIN FLOW (email + password) =======
+    const loginForm = document.getElementById('loginForm');
+    const loginEmail= document.getElementById('loginEmail');
+    const loginPass = document.getElementById('loginPass');
+    const loginBtn  = document.getElementById('loginBtn');
+    const loginMsg  = document.getElementById('loginMsg');
+    const toSignup  = document.getElementById('toSignup');
 
-      [sheetDisplay, sheetFirst, sheetLast, sheetEmail, sheetPass, sheetPass2].forEach(el => {
-        el.addEventListener('input', validate);
-      });
+    toSignup.addEventListener('click', ()=>{
+      closeSheet(loginSheet); openSheet(signupSheet);
+      setTimeout(()=> document.getElementById('sheetEmail')?.focus(), 0);
+    });
 
-      // Sign up (or sign in if already registered) → reserve username in DB → go to Stripe
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        if(!validate()) return;
+    loginForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      loginMsg.textContent = "";
+      loginBtn.disabled = true; loginBtn.textContent = "Logging in…";
+      const email = (loginEmail.value || "").trim();
+      const pass  = loginPass.value || "";
 
-        payBtn.disabled = true; payBtn.textContent = "Creating…";
-        authMsg.textContent = "";
+      if(!email || !pass){
+        loginBtn.disabled = false; loginBtn.textContent = "Login";
+        loginMsg.textContent = "Enter email and password.";
+        return;
+      }
+      try{
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if(error) throw error;
+        // success
+        closeSheet(loginSheet);
+        await refreshSessionUI();
+      }catch(err){
+        loginMsg.textContent = err?.message || "Login failed.";
+      }finally{
+        loginBtn.disabled = false; loginBtn.textContent = "Login";
+      }
+    });
 
-        const email = sheetEmail.value.trim();
-        const pass  = sheetPass.value;
+    // ======= SIGNUP + USERNAME RESERVE + STRIPE =======
+    const openSignupBtn = document.getElementById('openSignup');
+    const toLogin       = document.getElementById('toLogin');
 
-        // 1) Create or sign-in Supabase user (email confirmations recommended OFF for instant flow)
-        const { error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password: pass,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: {
-              display_name: sheetDisplay.value.trim(),
-              first_name: sheetFirst.value.trim(),
-              last_name: sheetLast.value.trim()
-            }
+    const sheetForm     = document.getElementById('sheetForm');
+    const sheetDisplay  = document.getElementById('sheetDisplay');
+    const sheetFirst    = document.getElementById('sheetFirst');
+    const sheetLast     = document.getElementById('sheetLast');
+    const sheetEmail    = document.getElementById('sheetEmail');
+    const sheetPass     = document.getElementById('sheetPass');
+    const sheetPass2    = document.getElementById('sheetPass2');
+    const errEmail      = document.getElementById('errEmail');
+    const errPass       = document.getElementById('errPass');
+    const payBtn        = document.getElementById('payBtn');
+    const authMsg       = document.getElementById('authMsg');
+
+    openSignupBtn.addEventListener('click', ()=>{
+      openSheet(signupSheet);
+      const src = document.getElementById('emailInput');
+      if(src?.value?.trim()) sheetEmail.value = src.value.trim();
+      setTimeout(()=> sheetDisplay?.focus(), 0);
+      validateSignup();
+    });
+    toLogin.addEventListener('click', ()=>{
+      closeSheet(signupSheet); openSheet(loginSheet);
+      setTimeout(()=> loginEmail?.focus(), 0);
+    });
+
+    function nonEmpty(v){ return (v||"").trim().length >= 1; }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function validateSignup(){
+      let ok = true;
+      if(!nonEmpty(sheetDisplay.value)) ok = false;
+      if(!nonEmpty(sheetFirst.value)) ok = false;
+      if(!nonEmpty(sheetLast.value)) ok = false;
+
+      const e = (sheetEmail.value || '').trim();
+      if(!emailRe.test(e)){ errEmail.textContent="Enter a valid email."; ok=false; } else { errEmail.textContent=""; }
+
+      const p1 = sheetPass.value || '';
+      const p2 = sheetPass2.value || '';
+      if(p1.length < 8){ errPass.textContent="Password must be at least 8 characters."; ok=false; }
+      else if(p1 !== p2){ errPass.textContent="Passwords don’t match."; ok=false; }
+      else { errPass.textContent=""; }
+
+      payBtn.disabled = !ok;
+      return ok;
+    }
+    [sheetDisplay, sheetFirst, sheetLast, sheetEmail, sheetPass, sheetPass2].forEach(el => {
+      el.addEventListener('input', validateSignup);
+    });
+
+    sheetForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(!validateSignup()) return;
+
+      payBtn.disabled = true; payBtn.textContent = "Creating…";
+      authMsg.textContent = "";
+
+      const email = sheetEmail.value.trim();
+      const pass  = sheetPass.value;
+
+      // 1) Create or sign-in Supabase user (recommend Supabase email confirmations = OFF for instant)
+      const { error: signUpErr } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            display_name: sheetDisplay.value.trim(),
+            first_name: sheetFirst.value.trim(),
+            last_name: sheetLast.value.trim()
           }
-        });
-        if(signUpErr && !/already registered/i.test(signUpErr.message || "")){
+        }
+      });
+      if(signUpErr && !/already registered/i.test(signUpErr.message || "")){
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        errEmail.textContent = signUpErr.message || "Sign up failed.";
+        return;
+      }
+      if(signUpErr && /already registered/i.test(signUpErr.message || "")){
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if(signInErr){
           payBtn.disabled = false; payBtn.textContent = "PAY";
-          errEmail.textContent = signUpErr.message || "Sign up failed.";
+          errEmail.textContent = signInErr.message || "Sign in failed.";
           return;
         }
-        if(signUpErr && /already registered/i.test(signUpErr.message || "")){
-          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
-          if(signInErr){
-            payBtn.disabled = false; payBtn.textContent = "PAY";
-            errEmail.textContent = signInErr.message || "Sign in failed.";
-            return;
-          }
-        }
+      }
 
-        // 2) Reserve username (DB unique + reserved-name triggers enforce it)
-        const { data: { user }, error: userErr } = await supabase.auth.getUser();
-        if (userErr || !user) {
-          payBtn.disabled = false; payBtn.textContent = "PAY";
-          authMsg.textContent = "Could not get session.";
-          return;
-        }
+      // 2) Reserve username (DB unique + reserved-name triggers enforce it)
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) {
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        authMsg.textContent = "Could not get session.";
+        return;
+      }
 
-        // Mirror DB normalization: lowercase, trim, only a-z 0-9 _
-        const wanted = sheetDisplay.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
-        if (wanted.length < 3) {
-          payBtn.disabled = false; payBtn.textContent = "PAY";
-          authMsg.textContent = "Username must be 3–20 chars (a–z, 0–9, _).";
-          return;
-        }
+      // Mirror DB normalization: lowercase, trim, only a-z 0-9 _
+      const wanted = sheetDisplay.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
+      if (wanted.length < 3) {
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        authMsg.textContent = "Username must be 3–20 chars (a–z, 0–9, _).";
+        return;
+      }
 
-        // Attempt insert (will fail if taken or reserved)
-        const { error: profileErr } = await supabase.from("profiles").insert({
-          id: user.id,
-          username: wanted,
-          display_name: sheetDisplay.value.trim(),
-          first_name: sheetFirst.value.trim(),
-          last_name: sheetLast.value.trim()
-        });
-
-        if (profileErr) {
-          payBtn.disabled = false; payBtn.textContent = "PAY";
-          const msg = profileErr.code === '23505'
-            ? "That username is already taken."
-            : (profileErr.code === '23514'
-              ? "That username is reserved. Try another."
-              : (profileErr.message || "Could not save profile.")
-            );
-          authMsg.textContent = msg;
-          return;
-        }
-
-        // 3) Proceed to Stripe hosted Checkout link
-        payBtn.textContent = "Redirecting…";
-        window.location.href = STRIPE_LINK;
+      const { error: profileErr } = await supabase.from("profiles").insert({
+        id: user.id,
+        username: wanted,
+        display_name: sheetDisplay.value.trim(),
+        first_name: sheetFirst.value.trim(),
+        last_name: sheetLast.value.trim()
       });
 
-      supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
-      refreshSessionUI();
-    })();
+      if (profileErr) {
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        const msg = profileErr.code === '23505'
+          ? "That username is already taken."
+          : (profileErr.code === '23514'
+            ? "That username is reserved. Try another."
+            : (profileErr.message || "Could not save profile.")
+          );
+        authMsg.textContent = msg;
+        return;
+      }
+
+      // 3) Proceed to Stripe hosted Checkout link
+      payBtn.textContent = "Redirecting…";
+      window.location.href = STRIPE_LINK;
+    });
+
+    // Initial auth UI + react to changes
+    supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
+    refreshSessionUI();
   </script>
 </body>
 </html>
