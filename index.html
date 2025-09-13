@@ -539,6 +539,48 @@
 
     function nonEmpty(v){ return (v||"").trim().length >= 1; }
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // ===== Username availability / reserved pre-check (ADDED) =====
+    let _unameTimer = null;
+    let _unameLast   = '';
+    let _unameState  = { taken:false, reserved:false, ok:false };
+
+    async function checkUsernameAvailability(nameRaw) {
+      const wanted = (nameRaw || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+      if (!wanted || wanted.length < 3) {
+        _unameState = { taken:false, reserved:false, ok:false };
+        return _unameState;
+      }
+      const { data, error } = await supabase.rpc('username_status', { u: wanted });
+      if (error) {
+        console.warn('[OSAI] username_status error:', error);
+        _unameState = { taken:false, reserved:false, ok:false };
+        return _unameState;
+      }
+      _unameState = { taken: !!data?.taken, reserved: !!data?.reserved, ok: !(data?.taken || data?.reserved) };
+      return _unameState;
+    }
+
+    async function validateUsernameInline() {
+      const normalized = (sheetDisplay.value || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
+      clearTimeout(_unameTimer);
+      if (normalized === _unameLast) return;
+      _unameLast = normalized;
+
+      if (!normalized) { authMsg.textContent = ''; payBtn.disabled = true; return; }
+      if (normalized.length < 3) { authMsg.textContent = 'Username must be at least 3 characters.'; payBtn.disabled = true; return; }
+
+      _unameTimer = setTimeout(async () => {
+        const res = await checkUsernameAvailability(normalized);
+        if (res.reserved) { authMsg.textContent = 'That username is reserved.'; payBtn.disabled = true; return; }
+        if (res.taken)    { authMsg.textContent = 'That username is already taken.'; payBtn.disabled = true; return; }
+        // let the generic validator re-enable the button when all fields valid
+        if (validateSignup()) { authMsg.textContent = ''; payBtn.disabled = false; }
+      }, 250);
+    }
+    // attach inline check (ADDED)
+    document.getElementById('sheetDisplay')?.addEventListener('input', validateUsernameInline);
+
     function validateSignup(){
       let ok = true;
       if(!nonEmpty(sheetDisplay.value)) ok = false;
@@ -608,6 +650,19 @@
       if (wanted.length < 3) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
         authMsg.textContent = "Username must be 3–20 chars (a–z, 0–9, _).";
+        return;
+      }
+
+      // ADDED: preflight username check to avoid server error
+      const status = await checkUsernameAvailability(wanted);
+      if (status.reserved) {
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        authMsg.textContent = "That username is reserved. Try another.";
+        return;
+      }
+      if (status.taken) {
+        payBtn.disabled = false; payBtn.textContent = "PAY";
+        authMsg.textContent = "That username is already taken.";
         return;
       }
 
