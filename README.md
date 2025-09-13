@@ -1,8 +1,13 @@
-# OSAI Landing
+# OSAI Static Landing (no build tools)
 
-Single-page React (Vite + TypeScript) build of your landing page.
+Pure HTML/CSS/JS. Drag the folder to your host (or open `index.html` locally).
 
-## Run locally
-```bash
-npm install
-npm run dev
+## Structure
+- `index.html` — markup
+- `css/styles.css` — styles
+- `js/app.js` — small interactivity (video play + modal)
+- `assets/logo.png` — (optional) your real logo; replace the embedded SVG if you want
+
+## Customize
+- Replace `assets/logo.png` and update the `<img>` `src` in `index.html` if desired.
+- Update links: Login URL, Stripe URL, etc. (search `TODO:` in files).
