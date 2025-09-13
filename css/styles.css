@@ -21,7 +21,7 @@ body{
 .hero{ padding: 44px 0 80px }
 .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
-/* Header (larger brand + small login) */
+/* Header — BIG brand + BIG login */
 .glassbar{
   position: sticky; top: 0; z-index: 40;
   background: rgba(0,0,0,.30);
@@ -30,18 +30,29 @@ body{
   border-bottom: 1px solid var(--border);
   contain: paint;
 }
-.nav{ display:flex; align-items:center; justify-content:space-between; padding: 10px 0 }
-.brand{ text-decoration:none; color:var(--text) }
-.brand-text{
-  font-size: 16px;               /* was 11px — increased by ~5px */
-  line-height: 1; 
-  letter-spacing:.16em;
-  opacity:.85;
-  text-transform: uppercase;
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 0; gap: 16px;
 }
-.nav-link{ color: var(--muted); text-decoration:none; font-weight:600 }
-.nav-link.small{ font-size:12px }
+.brand{ text-decoration:none; color:var(--text); white-space:nowrap }
+.brand-text{
+  font-size: 32px;              /* DOUBLED */
+  line-height: 1.05;
+  letter-spacing:.12em;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity:.92;
+}
+.nav-link{ color: var(--muted); text-decoration:none; font-weight:800; white-space:nowrap }
+.nav-link.small{ font-size:32px }  /* DOUBLED to match header weight */
 .nav-link:hover{ color: var(--text) }
+
+/* Make sure it doesn’t overpower on very small screens */
+@media (max-width: 520px){
+  .brand-text{ font-size: 22px }
+  .nav-link.small{ font-size: 22px }
+  .nav{ padding: 12px 0 }
+}
 
 /* Hero typography */
 .hero-title{
