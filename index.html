@@ -26,16 +26,13 @@
       position: relative;
       border-radius: 16px;
       padding: 14px;
-      background: rgba(255,255,255,.035);                 /* very light milk */
-      border: 1px solid rgba(255,255,255,.10);            /* faint stroke */
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.10);
       backdrop-filter: blur(14px) saturate(140%);
       -webkit-backdrop-filter: blur(14px) saturate(140%);
-      box-shadow:
-        0 12px 40px rgba(0,0,0,.55),                      /* soft outer */
-        inset 0 0 0 1px rgba(255,255,255,.04);            /* micro inner */
+      box-shadow: 0 12px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04);
       overflow: hidden;
     }
-    /* delicate gradient ring */
     .card.video::before{
       content:"";
       position:absolute; inset:0; pointer-events:none;
@@ -46,7 +43,6 @@
       mix-blend-mode: screen;
       opacity:.6;
     }
-    /* tiny top highlight for glass */
     .card.video::after{
       content:"";
       position:absolute; left:1px; right:1px; top:1px; height:32px; border-radius: 15px;
@@ -66,7 +62,7 @@
       aspect-ratio:16/9; width:100%;
       background: rgba(255,255,255,.02);
       border-radius: 12px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,.08);            /* slimmer, softer */
+      border: 1px solid rgba(255,255,255,.08);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
       position:relative;
     }
@@ -79,12 +75,9 @@
     .play-dot{
       width: 56px; height: 56px; border-radius: 9999px;
       display:flex; align-items:center; justify-content:center;
-      background:
-        radial-gradient(closest-side, rgba(255,255,255,.98), rgba(255,255,255,.92));
+      background: radial-gradient(closest-side, rgba(255,255,255,.98), rgba(255,255,255,.92));
       color:#000; font-size: 20px; font-weight: 800;
-      box-shadow:
-        0 6px 18px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.7);
+      box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
     }
     .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.45) }
 
@@ -119,6 +112,7 @@
     .row-two .btn{ flex:1 }
     .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
     .info-line{ color:#8ab4ff; font-size:12px; min-height:16px }
+
     .btn.primary{ background:#fff; color:#000; border-radius:12px; padding:.9rem 1.1rem; border:1px solid rgba(255,255,255,.22) }
     .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
 
@@ -132,12 +126,11 @@
   </style>
 </head>
 
-<!-- ADDITIVE: Checkout bootstrap that can be left in place safely -->
+<!-- ADDITIVE: Checkout bootstrap -->
 <script type="module">
-  // ===== ADDITIVE Stripe Checkout bootstrap (no removals) =====
-  const CHECKOUT_PRICE_ID = "price_XXXXXX"; // <-- set your real Stripe Price ID
-  const SUCCESS_URL = `${location.origin}/?success=1`;
-  const CANCEL_URL  = `${location.origin}/?canceled=1`;
+  const CHECKOUT_PRICE_ID = "price_1S6eI9J0uj5iBUehTf0MCJyr";   // your live $20/mo price
+  const SUCCESS_URL = `https://www.osai.llc/?success=1`;
+  const CANCEL_URL  = `https://www.osai.llc/?canceled=1`;
 
   const byId = (id) => document.getElementById(id);
   const signupForm   = byId("signupForm")   || document.querySelector("form#signupForm");
@@ -157,13 +150,11 @@
         body: JSON.stringify({
           priceId: CHECKOUT_PRICE_ID,
           successUrl: SUCCESS_URL,
-          cancelUrl: CANCEL_URL
+          cancelUrl:  CANCEL_URL
         })
       });
       const json = await resp.json();
-      if (!resp.ok || !json?.url) {
-        throw new Error(json?.error || "Checkout init failed.");
-      }
+      if (!resp.ok || !json?.url) throw new Error(json?.error || "Checkout init failed.");
       window.location.href = json.url;
     } catch (err) {
       showAuthMsg(err.message || "Checkout error.");
@@ -178,12 +169,10 @@
       createCheckoutSession();
     });
 
-    signupButton.addEventListener("click", async (e) => {
+    signupButton.addEventListener("click", async () => {
       if (signupButton.dataset.osaiHandled) return;
       signupButton.dataset.osaiHandled = "1";
-      setTimeout(() => {
-        if (!document.hidden) createCheckoutSession();
-      }, 350);
+      setTimeout(() => { if (!document.hidden) createCheckoutSession(); }, 350);
     }, { capture: true });
   }
 </script>
@@ -351,12 +340,13 @@
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
+    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404"; // kept for completeness
+
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Footer year
-    const y = document.getElementById("year"); if (y) y.textContent = new Date().getFullYear();
+    document.getElementById("year")?.append(new Date().getFullYear());
 
     // Video embed
     function toEmbed(url){
@@ -510,7 +500,6 @@
       try{
         const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
         if(error) throw error;
-        // success
         closeSheet(loginSheet);
         await refreshSessionUI();
       }catch(err){
@@ -582,7 +571,6 @@
       const email = sheetEmail.value.trim();
       const pass  = sheetPass.value;
 
-      // 1) Create or sign-in Supabase user
       const { error: signUpErr } = await supabase.auth.signUp({
         email,
         password: pass,
@@ -609,7 +597,6 @@
         }
       }
 
-      // 2) Reserve username (DB unique + reserved-name triggers enforce it)
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
@@ -644,36 +631,34 @@
         return;
       }
 
-      // ---- OSAI ADDITIVE: Prefer real Stripe Checkout Session (no removals) ----
+      // ---- OSAI ADDITIVE: real Stripe Checkout Session (no removals) ----
       await (async () => {
         try {
           const resp = await fetch("/api/create-checkout-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              priceId: "price_XXXXXX",                           // <-- replace with your real Stripe Price ID
-              successUrl: `${location.origin}/?success=1`,
-              cancelUrl:  `${location.origin}/?canceled=1`
+              priceId: "price_1S6eI9J0uj5iBUehTf0MCJyr",
+              successUrl: "https://www.osai.llc/?success=1",
+              cancelUrl:  "https://www.osai.llc/?canceled=1"
             })
           });
           const json = await resp.json();
           if (!resp.ok || !json?.url) throw new Error(json?.error || "Checkout init failed.");
-          window.location.href = json.url;                      // Stripe-hosted Checkout
+          window.location.href = json.url;
         } catch (err) {
           authMsg.textContent = err?.message || "Checkout error.";
           payBtn.disabled = false; payBtn.textContent = "PAY";
         }
       })();
-      // We handled Checkout above. Keep your original lines intact below, but short-circuit now.
-      return;
+      return; // keep your original lines intact below
       // ---- end OSAI ADDITIVE ----
 
-      // 3) Proceed to Stripe hosted Checkout link (kept for completeness; NOT removed)
+      // Kept for completeness (not executed due to return):
       payBtn.textContent = "Redirecting…";
       window.location.href = STRIPE_LINK;
     });
 
-    // Initial auth UI + react to changes
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
     refreshSessionUI();
   </script>
