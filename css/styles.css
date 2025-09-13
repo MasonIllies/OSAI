@@ -21,7 +21,7 @@ body{
 .hero{ padding: 44px 0 80px }
 .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
-/* Header (tiny brand + small login) */
+/* Header (larger brand + small login) */
 .glassbar{
   position: sticky; top: 0; z-index: 40;
   background: rgba(0,0,0,.30);
@@ -33,13 +33,17 @@ body{
 .nav{ display:flex; align-items:center; justify-content:space-between; padding: 10px 0 }
 .brand{ text-decoration:none; color:var(--text) }
 .brand-text{
-  font-size: 11px; letter-spacing:.18em; opacity:.8; text-transform: uppercase;
+  font-size: 16px;               /* was 11px — increased by ~5px */
+  line-height: 1; 
+  letter-spacing:.16em;
+  opacity:.85;
+  text-transform: uppercase;
 }
 .nav-link{ color: var(--muted); text-decoration:none; font-weight:600 }
 .nav-link.small{ font-size:12px }
 .nav-link:hover{ color: var(--text) }
 
-/* Hero typography to match screenshot */
+/* Hero typography */
 .hero-title{
   margin: 12px 0 16px;
   line-height: 1.08;
