@@ -1,3 +1,4 @@
+// /api/create-checkout-session.js
 import Stripe from "stripe";
 import { getAdminSupabase } from "../lib/supabaseAdmin.js";
 import cookie from "cookie";
@@ -10,7 +11,9 @@ async function getUserFromCookie(req) {
   try {
     const raw = req.headers.cookie || "";
     const parsed = cookie.parse(raw || "");
-    const access = parsed["sb-access-token"] || parsed["supabase-auth-token"];
+    const access =
+      parsed["sb-access-token"] ||
+      parsed["supabase-auth-token"];
     if (!access) return null;
 
     const supabase = getAdminSupabase();
@@ -24,14 +27,17 @@ async function getUserFromCookie(req) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
   try {
     const { priceId, successUrl, cancelUrl } = req.body || {};
-    if (!priceId) return res.status(400).json({ error: "Missing priceId" });
+    const price = priceId || process.env.STRIPE_PRICE_ID;
+    if (!price) return res.status(400).json({ error: "Missing priceId" });
 
     const user = await getUserFromCookie(req);
     if (!user) return res.status(401).json({ error: "Not authenticated" });
 
     const supabase = getAdminSupabase();
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, email, display_name, stripe_customer_id")
@@ -52,7 +58,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price, quantity: 1 }],
       success_url: successUrl || `${process.env.PUBLIC_SITE_URL}/?success=1`,
       cancel_url:  cancelUrl  || `${process.env.PUBLIC_SITE_URL}/?canceled=1`,
       client_reference_id: user.id,
