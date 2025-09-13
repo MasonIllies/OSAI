@@ -130,11 +130,13 @@ input:focus, select:focus{ box-shadow: 0 0 0 3px var(--ring) }
 }
 .btn.ghost{ background: rgba(255,255,255,.06); color: var(--text) }
 .btn.ghost:hover{ background: var(--glassHover) }
-.price{ margin-top: 10px; font-size: 18px; font-weight: 700 }
+
+/* >>> doubled space between signup row and price line <<< */
+.price{ margin-top: 20px; font-size: 18px; font-weight: 700 }
 .price .strong{ font-weight: 800 }
 .muted{ color: var(--muted) }
 
-/* Pills (more breathing room now) */
+/* Pills (more breathing room) */
 .pills{ display:flex; flex-wrap:wrap; gap:10px; padding-top: 20px }
 .pills.spaced{ margin-top: 8px }
 .pill{ margin-bottom: 4px }
