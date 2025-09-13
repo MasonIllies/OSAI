@@ -131,8 +131,8 @@ input:focus, select:focus{ box-shadow: 0 0 0 3px var(--ring) }
 .btn.ghost{ background: rgba(255,255,255,.06); color: var(--text) }
 .btn.ghost:hover{ background: var(--glassHover) }
 
-/* >>> doubled space between signup row and price line <<< */
-.price{ margin-top: 20px; font-size: 18px; font-weight: 700 }
+/* TRIPLED space between signup row and price line */
+.price{ margin-top: 60px; font-size: 18px; font-weight: 700 }
 .price .strong{ font-weight: 800 }
 .muted{ color: var(--muted) }
 
