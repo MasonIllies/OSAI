@@ -17,32 +17,36 @@
   <link rel="preload" href="/fonts/Sansation-Bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/fonts/fonts.css" />
 
-  <!-- Styles -->
+  <!-- Site CSS -->
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
-    /* Ensure 16:9 frame even if external CSS hasn't updated yet */
+    /* Ensure 16:9 video frame even if external CSS lags */
     .video-frame{ aspect-ratio:16/9; width:100%; background:rgba(0,0,0,.40); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.1); position:relative; }
     .play{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:transparent; color:rgba(255,255,255,.90); border:0; cursor:pointer; font-weight:700; }
     .play-dot{ width:56px; height:56px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.95); color:#000; font-size:20px; font-weight:800; }
     .play-label{ font-size:13px }
 
-    /* Email dropdown (lightweight, no libs) */
+    /* Larger, more official pay modal */
+    .sheet-card{ max-width:560px !important; padding:20px !important; }
+    .sheet h3{ margin:0; font-size:22px }
+    .form-row{ display:flex; flex-direction:column; gap:8px }
+    .form-row + .form-row{ margin-top:12px }
+    .label{ font-size:13px; color:rgba(255,255,255,.75) }
+    .input{ border-radius:12px; padding:12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; }
+    .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35) }
+    .row-two{ display:flex; gap:10px; flex-wrap:wrap }
+    .row-two .btn{ flex:1 }
+    .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
+    .btn.primary{ background:#fff; color:#000 }
+    .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
+    .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
+    .subtle{ color:rgba(255,255,255,.65); font-size:12px; margin:6px 0 0 }
     .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
-    .email-dd{
-      position:absolute; left:0; right:0; top:calc(100% + 6px);
-      background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px;
-      box-shadow:0 18px 40px rgba(0,0,0,.55);
-      padding:6px; z-index:30; display:none;
-    }
+    .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none; }
     .email-dd.open{ display:block }
-    .email-item{
-      padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea;
-      font-size:14px; display:flex; align-items:center; justify-content:space-between;
-    }
-    .email-item:hover, .email-item.active{
-      background:rgba(255,255,255,.08);
-    }
+    .email-item{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea; font-size:14px; display:flex; align-items:center; justify-content:space-between; }
+    .email-item:hover, .email-item.active{ background:rgba(255,255,255,.08); }
     .email-hint{ color:rgba(255,255,255,.55); font-size:12px; margin-left:10px }
   </style>
 </head>
@@ -50,9 +54,8 @@
   <!-- Header -->
   <header class="glassbar">
     <div class="container nav">
-      <!-- small “s” preserved via CSS (text-transform: none) -->
       <a class="brand" href="/"><span class="brand-text">MASIN’s OSAI</span></a>
-      <a class="nav-link small" href="https://www.osai.llc/login">Login</a>
+      <a id="authLink" class="nav-link small" href="#">Login</a>
     </div>
   </header>
 
@@ -78,10 +81,9 @@
       <div class="card video">
         <span class="pill intro">INTRODUCTION VIDEO</span>
 
-        <!-- Paste any YouTube URL in data-video (watch, youtu.be, or embed) -->
+        <!-- Any YouTube URL; auto-converted to embed -->
         <div class="video-frame" id="videoFrame">
-          <button id="playBtn" class="play"
-            aria-label="Play introduction video"
+          <button id="playBtn" class="play" aria-label="Play introduction video"
             data-video="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
             <div class="play-dot">▶</div>
             <span class="play-label">PLAY</span>
@@ -119,54 +121,72 @@
 
   <footer class="container footer">© <span id="year"></span> OSAI</footer>
 
-  <!-- Signup Sheet (modal) -->
+  <!-- AUTH / PAY SHEET -->
   <div id="sheet" class="sheet hidden" aria-hidden="true">
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-card card">
       <div class="sheet-head">
         <h3>Create your account</h3>
-        <button class="close" data-close>✕</button>
+        <button class="close" data-close aria-label="Close">✕</button>
       </div>
-      <form id="sheetForm" class="sheet-body" onsubmit="return false;">
-        <input id="sheetEmail" type="email" required placeholder="you@example.com" />
-        <select id="method">
-          <option value="card">Pay with card (Stripe) — $20/mo</option>
-          <option value="google">Continue with Google</option>
-          <option value="apple">Continue with Apple</option>
-          <option value="magic">Email magic link</option>
-        </select>
 
-        <div id="cardExtras" class="stack">
-          <input id="fullName" type="text" placeholder="Full name (optional)" />
-          <label class="agree">
-            <input id="agree" type="checkbox" />
-            I agree to the Terms and Privacy Policy.
-          </label>
+      <div class="divider"></div>
+
+      <form id="sheetForm" class="sheet-body" onsubmit="return false;">
+        <!-- Identity -->
+        <div class="form-row">
+          <label class="label" for="sheetEmail">Email</label>
+          <input id="sheetEmail" class="input" type="email" required placeholder="you@example.com" autocomplete="email" />
+          <div id="errEmail" class="error-line"></div>
         </div>
 
-        <p id="error" class="error" hidden></p>
+        <div class="form-row">
+          <label class="label" for="sheetPass">Password</label>
+          <input id="sheetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
+        </div>
 
-        <button class="btn primary" type="submit" id="submitBtn">Continue</button>
-        <p class="hint">Card: opens Stripe. Google/Apple/Magic: opens auth.</p>
+        <div class="form-row">
+          <label class="label" for="sheetPass2">Confirm password</label>
+          <input id="sheetPass2" class="input" type="password" required placeholder="Re-enter password" autocomplete="new-password" minlength="8" />
+          <div id="errPass" class="error-line"></div>
+        </div>
+
+        <div class="row-two">
+          <button id="payBtn" class="btn primary" type="submit" disabled>PAY</button>
+          <button id="googleBtn" class="btn ghost" type="button">Continue with Google</button>
+        </div>
+
+        <p id="authMsg" class="subtle"></p>
+        <p class="subtle">You’ll be charged $20/month. Cancel anytime.</p>
       </form>
     </div>
   </div>
 
-  <!-- Inline JS: video + email dropdown + modal -->
-  <script>
+  <!-- Inline JS: video + dropdown + Supabase Auth -->
+  <script type="module">
+    // --------- YOUR SUPABASE PROJECT ----------
+    const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
+    const STRIPE_CHECKOUT_URL = "/checkout"; // TODO: replace with your Checkout route
+    // ------------------------------------------
+
+    // Load Supabase (ESM from CDN)
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     // Footer year
-    (function(){var y=document.getElementById("year"); if(y) y.textContent=new Date().getFullYear();})();
+    const y = document.getElementById("year"); if (y) y.textContent = new Date().getFullYear();
 
     // --- Video: convert any YouTube URL to embed and inject on click ---
     function toEmbed(url){
       try{
-        var u=new URL(url);
+        const u=new URL(url);
         if(u.hostname.includes("youtu.be")){
           return "https://www.youtube.com/embed/"+u.pathname.replace("/","")+"?autoplay=1&rel=0";
         }
         if(u.hostname.includes("youtube.com")){
           if(u.pathname==="/watch"){
-            var id=u.searchParams.get("v")||"";
+            const id=u.searchParams.get("v")||"";
             return "https://www.youtube.com/embed/"+id+"?autoplay=1&rel=0";
           }
           if(u.pathname.startsWith("/embed/")){
@@ -177,170 +197,166 @@
       return url;
     }
     (function(){
-      var frame=document.getElementById("videoFrame");
-      var btn=document.getElementById("playBtn");
+      const frame=document.getElementById("videoFrame");
+      const btn=document.getElementById("playBtn");
       if(!frame||!btn) return;
       function inject(){
         if(frame.dataset.played==="1") return; frame.dataset.played="1";
-        var raw=btn.getAttribute("data-video")||"https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-        var src=toEmbed(raw);
-        var iframe=document.createElement("iframe");
-        iframe.setAttribute("width","100%"); iframe.setAttribute("height","100%");
-        iframe.setAttribute("src",src);
-        iframe.setAttribute("allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
-        iframe.setAttribute("allowfullscreen","true"); iframe.setAttribute("title","Introduction video");
+        const raw=btn.getAttribute("data-video")||"https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        const src=toEmbed(raw);
+        const iframe=document.createElement("iframe");
+        iframe.width="100%"; iframe.height="100%"; iframe.src=src;
+        iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen=true; iframe.title="Introduction video";
         frame.innerHTML=""; frame.appendChild(iframe);
       }
       btn.addEventListener("click", inject);
-      btn.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
+      btn.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
     })();
 
     // --- Email dropdown autocomplete ---
     (function(){
-      var input = document.getElementById('emailInput');
-      var dd    = document.getElementById('emailDropdown');
+      const input = document.getElementById('emailInput');
+      const dd    = document.getElementById('emailDropdown');
       if(!input || !dd) return;
 
-      var DOMAINS = [
-        "gmail.com","icloud.com","outlook.com","yahoo.com",
-        "proton.me","pm.me","hotmail.com","live.com","me.com",
-        "hey.com","aol.com","zoho.com","osai.llc"
-      ];
+      const DOMAINS = ["gmail.com","icloud.com","outlook.com","yahoo.com","proton.me","pm.me","hotmail.com","live.com","me.com","hey.com","aol.com","zoho.com","osai.llc"];
+      let activeIndex = -1;
 
-      var activeIndex = -1;
-
-      function buildSuggestions(value){
-        var v = (value || "").trim();
-        if(!v) return [];
-
-        // split local@domain (if any)
-        var at = v.indexOf('@');
-        var local = at === -1 ? v : v.slice(0, at);
-        var dom   = at === -1 ? "" : v.slice(at+1).toLowerCase();
-
+      const build = (v) => {
+        v = (v||"").trim(); if(!v) return [];
+        const at = v.indexOf('@');
+        const local = at===-1? v : v.slice(0,at);
+        const dom = at===-1? "" : v.slice(at+1).toLowerCase();
         if(!local) return [];
-
-        var list = DOMAINS
-          .filter(function(d){ return dom ? d.startsWith(dom) : true; })
-          .slice(0,8)
-          .map(function(d){ return local + "@" + d; });
-
-        return list;
-      }
-
-      function render(list){
-        dd.innerHTML = "";
-        activeIndex = -1;
+        return DOMAINS.filter(d => dom ? d.startsWith(dom) : true).slice(0,8).map(d => `${local}@${d}`);
+      };
+      const render = list => {
+        dd.innerHTML=""; activeIndex=-1;
         if(!list.length){ dd.classList.remove('open'); return; }
-
-        list.forEach(function(s, idx){
-          var item = document.createElement('div');
-          item.className = 'email-item';
-          item.setAttribute('role','option');
-          item.textContent = s;
-
-          var hint = document.createElement('span');
-          hint.className = 'email-hint';
-          hint.textContent = 'Enter';
-          item.appendChild(hint);
-
-          item.addEventListener('mousedown', function(e){
-            e.preventDefault(); // keep focus in input
-            commit(s);
-          });
-
-          dd.appendChild(item);
+        list.forEach(s=>{
+          const el=document.createElement('div'); el.className='email-item'; el.setAttribute('role','option');
+          el.textContent=s; const hint=document.createElement('span'); hint.className='email-hint'; hint.textContent='Enter';
+          el.appendChild(hint); el.addEventListener('mousedown', e=>{ e.preventDefault(); commit(s); });
+          dd.appendChild(el);
         });
-
         dd.classList.add('open');
-      }
-
-      function commit(val){
-        input.value = val;
-        closeDD();
-      }
-
-      function closeDD(){
-        dd.classList.remove('open');
-        activeIndex = -1;
-      }
-
-      function highlight(i){
-        var items = dd.querySelectorAll('.email-item');
-        items.forEach(function(el){ el.classList.remove('active'); });
-        if(i >=0 && i < items.length){
-          items[i].classList.add('active');
-        }
-      }
-
-      input.addEventListener('input', function(){
-        var list = buildSuggestions(input.value);
-        render(list);
+      };
+      const commit = val => { input.value=val; dd.classList.remove('open'); activeIndex=-1; };
+      const highlight = i => {
+        const items=dd.querySelectorAll('.email-item'); items.forEach(el=>el.classList.remove('active'));
+        if(i>=0 && i<items.length) items[i].classList.add('active');
+      };
+      input.addEventListener('input', ()=> render(build(input.value)));
+      input.addEventListener('keydown', e=>{
+        const items=dd.querySelectorAll('.email-item');
+        if(e.key==='ArrowDown'){ if(!dd.classList.contains('open')){ render(build(input.value)); return; } activeIndex=Math.min(activeIndex+1, items.length-1); highlight(activeIndex); e.preventDefault(); }
+        else if(e.key==='ArrowUp'){ if(!dd.classList.contains('open')) return; activeIndex=Math.max(activeIndex-1,0); highlight(activeIndex); e.preventDefault(); }
+        else if(e.key==='Enter'){ if(dd.classList.contains('open') && activeIndex>=0 && items[activeIndex]){ commit(items[activeIndex].childNodes[0].textContent); e.preventDefault(); } }
+        else if(e.key==='Escape'){ dd.classList.remove('open'); activeIndex=-1; }
       });
-
-      input.addEventListener('keydown', function(e){
-        var items = dd.querySelectorAll('.email-item');
-        if(e.key === 'ArrowDown'){
-          if(!dd.classList.contains('open')) {
-            render(buildSuggestions(input.value)); 
-            return;
-          }
-          activeIndex = Math.min(activeIndex+1, items.length-1);
-          highlight(activeIndex);
-          e.preventDefault();
-        } else if(e.key === 'ArrowUp'){
-          if(!dd.classList.contains('open')) return;
-          activeIndex = Math.max(activeIndex-1, 0);
-          highlight(activeIndex);
-          e.preventDefault();
-        } else if(e.key === 'Enter'){
-          if(dd.classList.contains('open') && activeIndex >= 0 && items[activeIndex]){
-            commit(items[activeIndex].childNodes[0].textContent);
-            e.preventDefault();
-          }
-        } else if(e.key === 'Escape'){
-          closeDD();
-        }
-      });
-
-      document.addEventListener('click', function(e){
-        if(!dd.contains(e.target) && e.target !== input){
-          closeDD();
-        }
-      });
+      document.addEventListener('click', e=>{ if(!dd.contains(e.target) && e.target !== input){ dd.classList.remove('open'); activeIndex=-1; }});
     })();
 
-    // --- Open modal on "Sign up" and prefill email ---
+    // --- Open modal + Supabase Auth (email/pass & Google) ---
     (function(){
-      var openBtn  = document.getElementById('openSignup');
-      var sheet    = document.getElementById('sheet');
-      var email    = document.getElementById('emailInput');
-      var sheetEmail = document.getElementById('sheetEmail');
+      const openBtn    = document.getElementById('openSignup');
+      const sheet      = document.getElementById('sheet');
+      const emailSrc   = document.getElementById('emailInput');
+      const sheetEmail = document.getElementById('sheetEmail');
+      const sheetPass  = document.getElementById('sheetPass');
+      const sheetPass2 = document.getElementById('sheetPass2');
+      const errEmail   = document.getElementById('errEmail');
+      const errPass    = document.getElementById('errPass');
+      const payBtn     = document.getElementById('payBtn');
+      const googleBtn  = document.getElementById('googleBtn');
+      const form       = document.getElementById('sheetForm');
+      const authLink   = document.getElementById('authLink');
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if(!openBtn || !sheet) return;
-
-      function openSheet(){
-        sheet.classList.remove('hidden');
-        sheet.setAttribute('aria-hidden','false');
-        if(sheetEmail && email && email.value.trim()){
-          sheetEmail.value = email.value.trim();
+      function setAuthUI(session){
+        if(session?.user){
+          authLink.textContent = "Logout";
+          authLink.onclick = async (e)=>{ e.preventDefault(); await supabase.auth.signOut(); setAuthUI(null); };
+        }else{
+          authLink.textContent = "Login";
+          authLink.onclick = (e)=>{ e.preventDefault(); openSheet(); };
         }
-        // focus inside
-        setTimeout(function(){ if(sheetEmail) sheetEmail.focus(); }, 0);
       }
 
+      async function refreshSessionUI(){
+        const { data: { session } } = await supabase.auth.getSession();
+        setAuthUI(session);
+      }
+
+      function validate(){
+        let ok = true;
+        const e = (sheetEmail.value || '').trim();
+        if(!emailRe.test(e)){ errEmail.textContent="Enter a valid email."; ok=false; } else { errEmail.textContent=""; }
+        const p1 = sheetPass.value || '';
+        const p2 = sheetPass2.value || '';
+        if(p1.length < 8){ errPass.textContent="Password must be at least 8 characters."; ok=false; }
+        else if(p1 !== p2){ errPass.textContent="Passwords don’t match."; ok=false; }
+        else { errPass.textContent=""; }
+        payBtn.disabled = !ok;
+        return ok;
+      }
+
+      function openSheet(){
+        sheet.classList.remove('hidden'); sheet.setAttribute('aria-hidden','false');
+        if(sheetEmail && emailSrc && emailSrc.value.trim()){ sheetEmail.value = emailSrc.value.trim(); }
+        setTimeout(()=> sheetEmail?.focus(), 0);
+        validate();
+      }
       function closeSheet(){
-        sheet.classList.add('hidden');
-        sheet.setAttribute('aria-hidden','true');
+        sheet.classList.add('hidden'); sheet.setAttribute('aria-hidden','true');
       }
 
       openBtn.addEventListener('click', openSheet);
-      sheet.addEventListener('click', function(e){
-        if(e.target.matches('[data-close]')) closeSheet();
+      sheet.addEventListener('click', (e)=>{ if(e.target.matches('[data-close]')) closeSheet(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !sheet.classList.contains('hidden')) closeSheet(); });
+
+      sheetEmail.addEventListener('input', validate);
+      sheetPass.addEventListener('input', validate);
+      sheetPass2.addEventListener('input', validate);
+
+      // Email+Password signup -> Supabase stores credentials
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        if(!validate()) return;
+        payBtn.disabled = true; payBtn.textContent = "Creating…";
+        const email = sheetEmail.value.trim();
+        const pass  = sheetPass.value;
+
+        const { error } = await supabase.auth.signUp({
+          email, password: pass,
+          options: { emailRedirectTo: window.location.origin }
+        });
+
+        if(error){
+          payBtn.disabled = false; payBtn.textContent = "PAY";
+          errEmail.textContent = error.message || "Sign up failed.";
+          return;
+        }
+
+        // Redirect to payment flow (replace with your real Checkout link/route)
+        window.location.href = STRIPE_CHECKOUT_URL + "?email=" + encodeURIComponent(email);
       });
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape' && !sheet.classList.contains('hidden')) closeSheet();
+
+      // Google OAuth
+      googleBtn.addEventListener('click', async ()=>{
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: { access_type: 'offline', prompt: 'consent' }
+          }
+        });
       });
+
+      // auth state changes
+      supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
+      refreshSessionUI();
     })();
   </script>
 </body>
