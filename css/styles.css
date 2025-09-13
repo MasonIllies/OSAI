@@ -4,9 +4,7 @@
   --ring:rgba(255,255,255,.35); --text:#fff; --muted:rgba(255,255,255,.70);
   --shadow:0 18px 60px rgba(0,0,0,.65);
   --radius:14px; --pad:16px;
-
-  /* Equal vertical rhythm under the video */
-  --segment: 51px;
+  --segment: 51px; /* equal spacing under video */
 }
 
 /* Base */
@@ -24,101 +22,90 @@ body{
 .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
 /* ===========================
-   Header — ELEGANT BLACK GLASS
+   Header — elegant dark glass
    =========================== */
 .glassbar{
   position: sticky; top: 0; z-index: 40;
   background:
-    linear-gradient(180deg, rgba(0,0,0,.90), rgba(0,0,0,.84)) padding-box,
+    linear-gradient(180deg, rgba(0,0,0,.92), rgba(0,0,0,.86)) padding-box,
     linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0)) border-box;
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
   box-shadow: 0 10px 26px rgba(0,0,0,.45);
 }
-.nav{
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 14px 0; gap: 16px;
-}
+.nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; gap:16px }
 
-/* Brand: refined glass capsule (Apple-y hairline + faint top sheen) */
+/* Brand — plain, no outline */
 .brand{ text-decoration:none; color:var(--text); white-space:nowrap }
 .brand-text{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding: .38rem .70rem;
-  font-size: 32px; line-height: 1.05; letter-spacing:.12em; font-weight:800; text-transform: uppercase;
+  font-size: 32px; line-height: 1.05; letter-spacing:.12em; font-weight: 800; text-transform: uppercase;
   color: rgba(255,255,255,.96);
-  border-radius: 9999px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04)) padding-box;
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),        /* faint inner top highlight */
-    0 8px 18px rgba(0,0,0,.35);                  /* soft outer shadow */
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
-}
-.brand-text:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-  border-color: rgba(255,255,255,.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.14),
-    0 10px 22px rgba(0,0,0,.42);
-}
-.brand-text:active{ transform: translateY(1px) scale(.995) }
-.brand-text:focus-visible{
-  outline: 3px solid rgba(255,255,255,.45);
-  outline-offset: 3px;
 }
 
-/* Login — elegant glass-outline pill, 25% smaller than brand */
-.nav-link{ text-decoration:none; white-space:nowrap; color: var(--muted); font-weight:800 }
-.nav-link.small{
-  display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
+/* Login — black stained glass capsule with offset outline */
+.nav-link{ text-decoration:none; white-space:nowrap; font-weight:800 }
+.nav-link.small.glass-login{
+  display:inline-flex; align-items:center; justify-content:center;
   font-size: 24px; line-height: 1;
-  padding: .36rem .64rem;
+  padding: .42rem .78rem;
   border-radius: 9999px;
-  color: rgba(255,255,255,.95);
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035)) padding-box;
-  border: 1px solid rgba(255,255,255,.16);
+
+  /* "stained glass" depth: layered blacks with subtle cool tint */
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 45%) padding-box,
+    radial-gradient(140% 160% at 100% 100%, rgba(60,80,120,.08), rgba(0,0,0,.0) 50%) padding-box,
+    linear-gradient(180deg, rgba(0,0,0,.80), rgba(0,0,0,.74)) padding-box;
+
+  color: rgba(255,255,255,.96);
+
+  /* inner hairline & soft inner glow */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.10),
-    0 6px 16px rgba(0,0,0,.32);
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
+    inset 0 -8px 20px rgba(0,0,0,.35),
+    /* OUTER offset outline (farther than border) */
+    0 0 0 4px rgba(255,255,255,.05);  /* subtle ring set away from the edge */
+
+  /* hairline border right on the capsule edge */
+  border: 1px solid rgba(255,255,255,.18);
+
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
 }
-.nav-link.small:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-  border-color: rgba(255,255,255,.22);
+
+.nav-link.small.glass-login:hover{
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,0) 45%) padding-box,
+    radial-gradient(140% 160% at 100% 100%, rgba(80,110,160,.10), rgba(0,0,0,.0) 50%) padding-box,
+    linear-gradient(180deg, rgba(10,10,10,.88), rgba(10,10,10,.78)) padding-box;
+  border-color: rgba(255,255,255,.24);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.14),
-    0 10px 22px rgba(0,0,0,.40);
+    inset 0 -8px 22px rgba(0,0,0,.38),
+    0 0 0 5px rgba(255,255,255,.06); /* slightly farther on hover */
   color: #fff;
 }
-.nav-link.small:active{ transform: translateY(1px) scale(.995) }
-.nav-link.small:focus-visible{
+.nav-link.small.glass-login:active{ transform: translateY(1px) scale(.995) }
+.nav-link.small.glass-login:focus-visible{
   outline: 3px solid rgba(255,255,255,.45);
-  outline-offset: 3px;
+  outline-offset: 5px; /* visibly farther when focused */
 }
 
 @media (max-width: 520px){
-  .brand-text{ font-size: 22px; padding: .30rem .56rem }
-  .nav-link.small{ font-size: 18px; padding: .30rem .52rem }
+  .brand-text{ font-size: 22px }
+  .nav-link.small.glass-login{ font-size: 18px; padding: .34rem .58rem }
   .nav{ padding: 12px 0 }
 }
 
-/* Hero headline */
+/* Hero headline (two lines on desktop) */
 .hero-title{
   margin: 12px 0 16px;
   font-weight: 800;
   line-height: 1.08;
-  font-size: 36px;             /* Base for small screens */
+  font-size: 36px;
 }
-@media (min-width: 600px){
-  .hero-title{ font-size: 44px }
-}
+@media (min-width: 600px){ .hero-title{ font-size: 44px } }
 @media (min-width: 960px){
   .hero-title{
     font-size: clamp(54px, 6vw, 64px);
@@ -168,7 +155,7 @@ body{
 }
 .play-label{ font-size: 13px }
 
-/* ==== POST-VIDEO RHYTHM ==== */
+/* Equal rhythm after video */
 .after-video{ margin-top: var(--segment); }
 .after-video > * + *{ margin-top: var(--segment); }
 
