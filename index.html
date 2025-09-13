@@ -12,14 +12,12 @@
   <link rel="shortcut icon" href="/favicon.ico" />
   <meta name="theme-color" content="#000000" />
 
-  <!-- Preload commonly used weights (TTF here; WOFF2 later if you convert) -->
+  <!-- Fonts -->
   <link rel="preload" href="/fonts/Sansation-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/fonts/Sansation-Bold.ttf" as="font" type="font/ttf" crossorigin>
-
-  <!-- Load font map -->
   <link rel="stylesheet" href="/fonts/fonts.css" />
 
-  <!-- Site styles -->
+  <!-- Styles -->
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
@@ -27,27 +25,43 @@
   <header class="glassbar">
     <div class="container nav">
       <a class="brand" href="/">
-        <img id="logo" alt="OSAI" height="28" src="./assets/logo.png" />
-        <span>OSAI</span>
+        <span class="brand-text">MASIN’S OSAI</span>
       </a>
-      <a class="nav-link" href="https://www.osai.llc/login">Login</a>
+      <a class="nav-link small" href="https://www.osai.llc/login">Login</a>
     </div>
   </header>
 
   <!-- Main -->
   <main>
     <section class="container hero">
-      <h1>$20/month. You get everything I ship.</h1>
-      <p class="sub">Straightforward. Early access. Continuous updates.</p>
+      <h1 class="hero-title">
+        Not just another shit app built<br />
+        to farm your data and trick<br />
+        you into forgetting your<br />
+        subscription.
+      </h1>
+
+      <p class="lede">
+        Give me $20 a month and I’ll give you <span class="u">everything</span> I can develop.<br />
+        Owned–created, designed, developed, marketed, and sold by me—
+      </p>
+
+      <p class="tiny-note">
+        Welcome to OSAI. Nice to meet you.
+      </p>
+
+      <p class="ps">p.s. Fuck you Google.</p>
 
       <!-- Video card -->
       <div class="card video">
-        <span class="pill">INTRODUCTION VIDEO</span>
+        <span class="pill intro">INTRODUCTION VIDEO</span>
         <div class="video-frame" id="videoFrame">
-          <button id="playBtn" class="play">
-            <div class="play-icon">▶</div>
-            <span>PLAY</span>
+          <!-- Click-to-play overlay -->
+          <button id="playBtn" class="play" aria-label="Play introduction video">
+            <div class="play-dot">▶</div>
+            <span class="play-label">PLAY</span>
           </button>
+          <!-- iframe injected by JS on click -->
         </div>
       </div>
 
@@ -61,9 +75,12 @@
 
       <!-- CTA -->
       <div class="cta">
-        <div class="price">$20/month — everything I can develop. <span class="muted">Early access + updates.</span></div>
+        <div class="price">
+          $20/month — <span class="strong">everything I can develop.</span>
+          <span class="muted">Early access + updates.</span>
+        </div>
         <div class="row">
-          <input id="emailInput" type="email" placeholder="you@example.com" />
+          <input id="emailInput" type="email" placeholder="sou@example.com" />
           <button id="openSignup" class="btn ghost">Sign up address</button>
         </div>
       </div>
