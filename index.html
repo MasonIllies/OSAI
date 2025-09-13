@@ -19,18 +19,38 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="./css/styles.css" />
+
   <style>
     /* Ensure 16:9 frame even if external CSS hasn't updated yet */
     .video-frame{ aspect-ratio:16/9; width:100%; background:rgba(0,0,0,.40); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.1); position:relative; }
     .play{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:transparent; color:rgba(255,255,255,.90); border:0; cursor:pointer; font-weight:700; }
     .play-dot{ width:56px; height:56px; border-radius:9999px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.95); color:#000; font-size:20px; font-weight:800; }
     .play-label{ font-size:13px }
+
+    /* Email dropdown (lightweight, no libs) */
+    .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
+    .email-dd{
+      position:absolute; left:0; right:0; top:calc(100% + 6px);
+      background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px;
+      box-shadow:0 18px 40px rgba(0,0,0,.55);
+      padding:6px; z-index:30; display:none;
+    }
+    .email-dd.open{ display:block }
+    .email-item{
+      padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea;
+      font-size:14px; display:flex; align-items:center; justify-content:space-between;
+    }
+    .email-item:hover, .email-item.active{
+      background:rgba(255,255,255,.08);
+    }
+    .email-hint{ color:rgba(255,255,255,.55); font-size:12px; margin-left:10px }
   </style>
 </head>
 <body>
   <!-- Header -->
   <header class="glassbar">
     <div class="container nav">
+      <!-- small “s” preserved via CSS (text-transform: none) -->
       <a class="brand" href="/"><span class="brand-text">MASIN’s OSAI</span></a>
       <a class="nav-link small" href="https://www.osai.llc/login">Login</a>
     </div>
@@ -58,7 +78,7 @@
       <div class="card video">
         <span class="pill intro">INTRODUCTION VIDEO</span>
 
-        <!-- You can paste ANY YouTube URL here (watch, youtu.be, or embed). -->
+        <!-- Paste any YouTube URL in data-video (watch, youtu.be, or embed) -->
         <div class="video-frame" id="videoFrame">
           <button id="playBtn" class="play"
             aria-label="Play introduction video"
@@ -69,11 +89,15 @@
         </div>
       </div>
 
-      <!-- Everything under the video (unchanged) -->
+      <!-- After video -->
       <div class="after-video">
+        <!-- SIGNUP with email dropdown -->
         <div class="signup">
           <div class="row centered">
-            <input id="emailInput" type="email" placeholder="you@example.com" />
+            <span class="email-wrap">
+              <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" />
+              <div id="emailDropdown" class="email-dd" role="listbox" aria-label="Email suggestions"></div>
+            </span>
             <button id="openSignup" class="btn ghost">Sign up</button>
           </div>
         </div>
@@ -95,19 +119,49 @@
 
   <footer class="container footer">© <span id="year"></span> OSAI</footer>
 
-  <!-- Modal unchanged ... -->
+  <!-- Signup Sheet (modal) -->
+  <div id="sheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card card">
+      <div class="sheet-head">
+        <h3>Create your account</h3>
+        <button class="close" data-close>✕</button>
+      </div>
+      <form id="sheetForm" class="sheet-body" onsubmit="return false;">
+        <input id="sheetEmail" type="email" required placeholder="you@example.com" />
+        <select id="method">
+          <option value="card">Pay with card (Stripe) — $20/mo</option>
+          <option value="google">Continue with Google</option>
+          <option value="apple">Continue with Apple</option>
+          <option value="magic">Email magic link</option>
+        </select>
 
-  <!-- Inline JS so it can't fail due to missing file path -->
+        <div id="cardExtras" class="stack">
+          <input id="fullName" type="text" placeholder="Full name (optional)" />
+          <label class="agree">
+            <input id="agree" type="checkbox" />
+            I agree to the Terms and Privacy Policy.
+          </label>
+        </div>
+
+        <p id="error" class="error" hidden></p>
+
+        <button class="btn primary" type="submit" id="submitBtn">Continue</button>
+        <p class="hint">Card: opens Stripe. Google/Apple/Magic: opens auth.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Inline JS: video + email dropdown + modal -->
   <script>
     // Footer year
     (function(){var y=document.getElementById("year"); if(y) y.textContent=new Date().getFullYear();})();
 
-    // Convert any YouTube URL to an embed URL
+    // --- Video: convert any YouTube URL to embed and inject on click ---
     function toEmbed(url){
       try{
         var u=new URL(url);
         if(u.hostname.includes("youtu.be")){
-          // https://youtu.be/ID -> /embed/ID
           return "https://www.youtube.com/embed/"+u.pathname.replace("/","")+"?autoplay=1&rel=0";
         }
         if(u.hostname.includes("youtube.com")){
@@ -120,38 +174,172 @@
           }
         }
       }catch(e){}
-      // Fallback: assume it's already embeddable or let browser handle it
       return url;
     }
-
-    // Inject iframe on click
     (function(){
       var frame=document.getElementById("videoFrame");
       var btn=document.getElementById("playBtn");
       if(!frame||!btn) return;
-
       function inject(){
-        if(frame.dataset.played==="1") return;
-        frame.dataset.played="1";
-
+        if(frame.dataset.played==="1") return; frame.dataset.played="1";
         var raw=btn.getAttribute("data-video")||"https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         var src=toEmbed(raw);
-
         var iframe=document.createElement("iframe");
-        iframe.setAttribute("width","100%");
-        iframe.setAttribute("height","100%");
+        iframe.setAttribute("width","100%"); iframe.setAttribute("height","100%");
         iframe.setAttribute("src",src);
         iframe.setAttribute("allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
-        iframe.setAttribute("allowfullscreen","true");
-        iframe.setAttribute("title","Introduction video");
+        iframe.setAttribute("allowfullscreen","true"); iframe.setAttribute("title","Introduction video");
+        frame.innerHTML=""; frame.appendChild(iframe);
+      }
+      btn.addEventListener("click", inject);
+      btn.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
+    })();
 
-        frame.innerHTML="";
-        frame.appendChild(iframe);
+    // --- Email dropdown autocomplete ---
+    (function(){
+      var input = document.getElementById('emailInput');
+      var dd    = document.getElementById('emailDropdown');
+      if(!input || !dd) return;
+
+      var DOMAINS = [
+        "gmail.com","icloud.com","outlook.com","yahoo.com",
+        "proton.me","pm.me","hotmail.com","live.com","me.com",
+        "hey.com","aol.com","zoho.com","osai.llc"
+      ];
+
+      var activeIndex = -1;
+
+      function buildSuggestions(value){
+        var v = (value || "").trim();
+        if(!v) return [];
+
+        // split local@domain (if any)
+        var at = v.indexOf('@');
+        var local = at === -1 ? v : v.slice(0, at);
+        var dom   = at === -1 ? "" : v.slice(at+1).toLowerCase();
+
+        if(!local) return [];
+
+        var list = DOMAINS
+          .filter(function(d){ return dom ? d.startsWith(dom) : true; })
+          .slice(0,8)
+          .map(function(d){ return local + "@" + d; });
+
+        return list;
       }
 
-      btn.addEventListener("click", inject);
-      btn.addEventListener("keydown", function(e){
-        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }
+      function render(list){
+        dd.innerHTML = "";
+        activeIndex = -1;
+        if(!list.length){ dd.classList.remove('open'); return; }
+
+        list.forEach(function(s, idx){
+          var item = document.createElement('div');
+          item.className = 'email-item';
+          item.setAttribute('role','option');
+          item.textContent = s;
+
+          var hint = document.createElement('span');
+          hint.className = 'email-hint';
+          hint.textContent = 'Enter';
+          item.appendChild(hint);
+
+          item.addEventListener('mousedown', function(e){
+            e.preventDefault(); // keep focus in input
+            commit(s);
+          });
+
+          dd.appendChild(item);
+        });
+
+        dd.classList.add('open');
+      }
+
+      function commit(val){
+        input.value = val;
+        closeDD();
+      }
+
+      function closeDD(){
+        dd.classList.remove('open');
+        activeIndex = -1;
+      }
+
+      function highlight(i){
+        var items = dd.querySelectorAll('.email-item');
+        items.forEach(function(el){ el.classList.remove('active'); });
+        if(i >=0 && i < items.length){
+          items[i].classList.add('active');
+        }
+      }
+
+      input.addEventListener('input', function(){
+        var list = buildSuggestions(input.value);
+        render(list);
+      });
+
+      input.addEventListener('keydown', function(e){
+        var items = dd.querySelectorAll('.email-item');
+        if(e.key === 'ArrowDown'){
+          if(!dd.classList.contains('open')) {
+            render(buildSuggestions(input.value)); 
+            return;
+          }
+          activeIndex = Math.min(activeIndex+1, items.length-1);
+          highlight(activeIndex);
+          e.preventDefault();
+        } else if(e.key === 'ArrowUp'){
+          if(!dd.classList.contains('open')) return;
+          activeIndex = Math.max(activeIndex-1, 0);
+          highlight(activeIndex);
+          e.preventDefault();
+        } else if(e.key === 'Enter'){
+          if(dd.classList.contains('open') && activeIndex >= 0 && items[activeIndex]){
+            commit(items[activeIndex].childNodes[0].textContent);
+            e.preventDefault();
+          }
+        } else if(e.key === 'Escape'){
+          closeDD();
+        }
+      });
+
+      document.addEventListener('click', function(e){
+        if(!dd.contains(e.target) && e.target !== input){
+          closeDD();
+        }
+      });
+    })();
+
+    // --- Open modal on "Sign up" and prefill email ---
+    (function(){
+      var openBtn  = document.getElementById('openSignup');
+      var sheet    = document.getElementById('sheet');
+      var email    = document.getElementById('emailInput');
+      var sheetEmail = document.getElementById('sheetEmail');
+
+      if(!openBtn || !sheet) return;
+
+      function openSheet(){
+        sheet.classList.remove('hidden');
+        sheet.setAttribute('aria-hidden','false');
+        if(sheetEmail && email && email.value.trim()){
+          sheetEmail.value = email.value.trim();
+        }
+        // focus inside
+        setTimeout(function(){ if(sheetEmail) sheetEmail.focus(); }, 0);
+      }
+
+      function closeSheet(){
+        sheet.classList.add('hidden');
+        sheet.setAttribute('aria-hidden','true');
+      }
+
+      openBtn.addEventListener('click', openSheet);
+      sheet.addEventListener('click', function(e){
+        if(e.target.matches('[data-close]')) closeSheet();
+      });
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape' && !sheet.classList.contains('hidden')) closeSheet();
       });
     })();
   </script>
