@@ -17,36 +17,27 @@
   <link rel="preload" href="/fonts/Sansation-Bold.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/fonts/fonts.css" />
 
-  <!-- Site CSS -->
+  <!-- Optional external CSS file you already had -->
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
     :root{
       /* Core palette */
-      --bg-0: #07080a;
-      --bg-1: #0a0c10;
-      --bg-2: #0f1218;
-      --text: #ffffff;
-      --muted: rgba(255,255,255,.72);
+      --bg-0: #07080a; --bg-1: #0a0c10; --bg-2: #0f1218;
+      --text:#ffffff; --muted: rgba(255,255,255,.72);
 
       /* Glass + borders */
-      --glass: rgba(255,255,255,.04);
-      --glass-strong: rgba(255,255,255,.06);
-      --stroke: rgba(255,255,255,.10);
-      --stroke-soft: rgba(255,255,255,.06);
-      --inner: rgba(255,255,255,.06);
+      --glass: rgba(255,255,255,.04); --glass-strong: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.10); --stroke-soft: rgba(255,255,255,.06);
       --ring: rgba(180,210,255,.20);
 
-      /* Accents (subtle neon) */
-      --glow-1: 220 85% 62%;   /* blue-cyan */
-      --glow-2: 280 75% 62%;   /* violet     */
+      /* Accents for hairline */
+      --glow-1: 220 85% 62%;
+      --glow-2: 280 75% 62%;
 
-      --radius: 16px;
-      --shadow: 0 24px 80px rgba(0,0,0,.70);
-      --pad: 16px;
+      --radius: 16px; --shadow: 0 24px 80px rgba(0,0,0,.70); --pad:16px;
     }
 
-    /* Global reset & luxury dark background with grain */
     *{ box-sizing:border-box }
     html, body { height:100% }
     body{
@@ -58,14 +49,11 @@
       -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
       letter-spacing:.2px;
       font-family: "Sansation", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
-      position:relative;
-      overflow-x: hidden;
+      position:relative; overflow-x:hidden;
     }
-    /* ultra-fine grain overlay */
     body::before{
-      content:"";
-      position:fixed; inset:-2px; pointer-events:none; z-index:-1;
-      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='.15'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 .02 .04 .06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      content:""; position:fixed; inset:-2px; pointer-events:none; z-index:-1;
+      background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='.15'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 .02 .04 .06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
       mix-blend-mode: soft-light;
     }
 
@@ -73,108 +61,75 @@
     .hero{ padding: 48px 0 88px }
     .footer{ padding: 40px 0; color: var(--muted); font-size: 13px }
 
-    /* HEADER — deep glass, radiant hairline, floating */
+    /* Header glass */
     .glassbar{
       position: sticky; top: 0; z-index: 40;
-      backdrop-filter: blur(16px) saturate(140%);
-      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
       background: linear-gradient(180deg, rgba(10,12,16,.85), rgba(10,12,16,.60));
       border-bottom: 1px solid var(--stroke-soft);
-      box-shadow:
-        0 10px 40px rgba(0,0,0,.45),
-        inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow: 0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
     }
-    .nav{
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 14px 0; gap: 16px;
-    }
+    .nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; gap:16px }
     .brand{ text-decoration:none; color:var(--text); white-space:nowrap }
-    .brand-text{
-      font-size: 32px; line-height: 1.05; letter-spacing:.12em;
-      font-weight: 800; text-transform: uppercase; opacity:.92;
-    }
+    .brand-text{ font-size:32px; line-height:1.05; letter-spacing:.12em; font-weight:800; text-transform:uppercase; opacity:.92 }
     .nav-link{ color: var(--muted); text-decoration:none; font-weight:800; white-space:nowrap }
     .nav-link.small{ font-size:32px }
     .nav-link:hover{ color: var(--text) }
+    @media (max-width: 520px){ .brand-text{ font-size:22px } .nav-link.small{ font-size:22px } .nav{ padding:12px 0 } }
 
-    @media (max-width: 520px){
-      .brand-text{ font-size: 22px }
-      .nav-link.small{ font-size: 22px }
-      .nav{ padding: 12px 0 }
-    }
-
-    /* HERO */
+    /* Hero */
     .hero-title{
-      margin: 8px 0 14px;
-      font-weight: 800;
-      line-height: 1.02;
-      font-size: clamp(44px, 6vw, 64px);
-      max-width: 22ch;
-      text-wrap: balance;
-      letter-spacing:.01em;
+      margin:8px 0 14px; font-weight:800; line-height:1.02;
+      font-size: clamp(44px, 6vw, 64px); max-width:22ch; text-wrap:balance; letter-spacing:.01em;
       background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.82));
-      -webkit-background-clip: text; background-clip: text;
-      color: transparent;
+      -webkit-background-clip:text; background-clip:text; color:transparent;
       text-shadow: 0 6px 30px rgba(0,0,0,.65);
     }
-    .lede{ color: var(--muted); margin: 8px 0 8px; line-height: 1.48; }
-    .lede .u{ text-decoration: underline; text-underline-offset: 4px }
-    .tiny-note{ font-size: 13px; color: var(--muted); margin: 6px 0 18px; position: relative; }
-    .tiny-note::after{ content:""; display:block; width: 160px; height:1px; margin-top:8px; background: rgba(255,255,255,.16); }
-    .ps{ font-size: 12px; color: var(--muted); font-style: italic; margin: 4px 0 18px; }
+    .lede{ color: var(--muted); margin: 8px 0 8px; line-height: 1.48 }
+    .lede .u{ text-decoration: underline; text-underline-offset:4px }
+    .tiny-note{ font-size:13px; color:var(--muted); margin:6px 0 18px; position:relative }
+    .tiny-note::after{ content:""; display:block; width:160px; height:1px; margin-top:8px; background: rgba(255,255,255,.16) }
+    .ps{ font-size:12px; color:var(--muted); font-style:italic; margin:4px 0 18px }
 
-    /* 2025 GLASS CARD — subdued luxury */
+    /* VIDEO CARD — simple glass with color hairline */
     .card.video{
       position: relative; border-radius: var(--radius); padding: 14px; overflow: hidden;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) padding-box;
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(18px) saturate(150%);
-      -webkit-backdrop-filter: blur(18px) saturate(150%);
-      box-shadow:
-        0 18px 70px rgba(0,0,0,.65),
-        0 2px 0 rgba(255,255,255,.04) inset;
+      background: rgba(255,255,255,.028);
+      border: none;
+      backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+      box-shadow: 0 18px 70px rgba(0,0,0,.65);
       isolation: isolate;
     }
-    /* Radiant perimeter + soft vignette */
     .card.video::before{
-      content:"";
-      position:absolute; inset:-1px; border-radius: calc(var(--radius) + 1px);
-      pointer-events:none; z-index:1;
-      background:
-        conic-gradient(from 210deg,
-          hsl(var(--glow-1) / .18) 0deg,
-          transparent 60deg,
-          transparent 220deg,
-          hsl(var(--glow-2) / .18) 300deg,
-          transparent 360deg);
-      filter: blur(12px);
-      opacity:.8;
-      mask: linear-gradient(#000 55%, transparent 85%);
+      content:""; position:absolute; inset:0; border-radius: var(--radius);
+      padding: 1px;
+      background: conic-gradient(from 210deg,
+        hsl(var(--glow-1) / .55),
+        hsl(var(--glow-2) / .55),
+        hsl(var(--glow-1) / .55)
+      );
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity:.55; filter: blur(.2px); pointer-events:none;
     }
     .card.video::after{
-      content:"";
-      position:absolute; inset:0; pointer-events:none; z-index:0;
-      background:
-        radial-gradient(120% 120% at 50% -10%, rgba(255,255,255,.12), transparent 45%),
-        radial-gradient(80% 120% at 50% 120%, rgba(255,255,255,.06), transparent 55%);
-      mix-blend-mode: screen;
+      content:""; position:absolute; left:2px; right:2px; top:2px; height:28px;
+      border-radius: calc(var(--radius) - 2px);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
+      pointer-events:none; mix-blend-mode: screen; opacity:.6;
     }
+    .card.video:hover::before{ opacity:.8 }
 
     .video .intro{
       position:absolute; top:14px; left:14px; z-index: 3;
-      border: 1px solid var(--stroke); background: rgba(0,0,0,.48);
-      backdrop-filter: blur(6px) saturate(120%);
-      -webkit-backdrop-filter: blur(6px) saturate(120%);
+      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.42);
+      backdrop-filter: blur(6px) saturate(120%); -webkit-backdrop-filter: blur(6px) saturate(120%);
     }
     .video-frame{
       aspect-ratio:16/9; width:100%;
-      background: rgba(255,255,255,.015);
-      border-radius: 12px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.05),
-        inset 0 -1px 0 rgba(255,255,255,.03);
+      background: rgba(255,255,255,.012);
+      border-radius: 12px; overflow: hidden; border:none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -1px 0 rgba(0,0,0,.16);
       position:relative;
     }
     .play{
@@ -182,52 +137,43 @@
       gap:10px; background: transparent; color: rgba(255,255,255,.94); border:0; cursor:pointer; font-weight:800;
       letter-spacing:.02em; transition: transform .14s ease, opacity .14s ease;
     }
-    .play:hover{ transform: translateY(-1px); }
+    .play:hover{ transform: translateY(-1px) }
     .play-dot{
-      width: 58px; height: 58px; border-radius: 9999px;
-      display:flex; align-items:center; justify-content:center;
+      width:58px; height:58px; border-radius:9999px; display:flex; align-items:center; justify-content:center;
       background: radial-gradient(closest-side, rgba(255,255,255,.98), rgba(255,255,255,.92));
-      color:#000; font-size: 20px; font-weight: 900;
-      box-shadow:
-        0 10px 28px rgba(0,0,0,.45),
-        inset 0 1px 0 rgba(255,255,255,.7);
+      color:#000; font-size:20px; font-weight:900;
+      box-shadow: 0 10px 28px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.7);
     }
-    .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.45) }
+    .play-label{ font-size:13px; text-shadow: 0 1px 0 rgba(0,0,0,.45) }
 
-    /* Spacing rhythm under video */
-    .after-video{ margin-top: 54px }
-    .after-video > * + *{ margin-top: 54px }
+    .after-video{ margin-top:54px }
+    .after-video > * + *{ margin-top:54px }
 
-    /* Signup row */
-    .signup{ text-align: center }
-    .row{ display:flex; gap:10px; flex-wrap: wrap }
-    .row.centered{ justify-content: center }
+    .signup{ text-align:center }
+    .row{ display:flex; gap:10px; flex-wrap:wrap }
+    .row.centered{ justify-content:center }
     input, select{
-      border-radius: 12px; border: 1px solid var(--stroke);
-      background: #fff; color:#000; padding: 12px 14px; outline: none;
-      font: inherit; width: min(420px, 100%);
+      border-radius:12px; border:1px solid var(--stroke);
+      background:#fff; color:#000; padding:12px 14px; outline:none; font:inherit;
+      width:min(420px,100%);
     }
-    input:focus, select:focus{ box-shadow: 0 0 0 3px var(--ring) }
+    input:focus, select:focus{ box-shadow:0 0 0 3px var(--ring) }
     .btn{
-      display:inline-flex; align-items:center; gap:.5rem; border-radius: 12px;
+      display:inline-flex; align-items:center; gap:.5rem; border-radius:12px;
       border:1px solid var(--stroke); padding:.85rem 1.05rem; font-weight:800;
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-      cursor:pointer
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease; cursor:pointer
     }
     .btn.ghost{
-      color: var(--text);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      color:var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%);
       box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
     }
     .btn.ghost:hover{ background: var(--glass-strong) }
 
-    /* Price line + pills */
-    .price{ font-size: 18px; font-weight: 800; text-align: center }
-    .price .strong{ font-weight: 900 }
-    .muted{ color: var(--muted) }
+    .price{ font-size:18px; font-weight:800; text-align:center }
+    .price .strong{ font-weight:900 }
+    .muted{ color:var(--muted) }
     .pills{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center }
     .pill{
       display:inline-block; border-radius:9999px; font-weight:700; letter-spacing:.04em;
@@ -237,35 +183,28 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
 
-    /* MODALS — same solid black but refined micro-borders */
-    .sheet{ position:fixed; inset:0; z-index:1000; }
+    /* MODALS */
+    .sheet.hidden{ display:none }
+    .sheet{ position:fixed; inset:0; z-index:1000 }
     .sheet-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.62); backdrop-filter: blur(4px) }
     .sheet-card{
-      position:relative; z-index:1;
-      margin: 8vh auto 0 auto; max-width:560px; border-radius:16px; padding:20px;
-      background:
-        linear-gradient(180deg, rgba(10,12,16,.96), rgba(10,12,16,.92)) padding-box;
+      position:relative; z-index:1; margin:8vh auto 0 auto; max-width:560px; border-radius:16px; padding:20px;
+      background: linear-gradient(180deg, rgba(10,12,16,.96), rgba(10,12,16,.92)) padding-box;
       border: 1px solid rgba(255,255,255,.12);
-      box-shadow:
-        0 30px 80px rgba(0,0,0,.85),
-        inset 0 1px 0 rgba(255,255,255,.05);
+      box-shadow: 0 30px 80px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);
     }
     .sheet h3{ margin:0; font-size:22px }
     .sheet .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
     .sheet .muted-link{ color:rgba(255,255,255,.78); font-size:13px; text-decoration:underline; cursor:pointer }
 
-    .form-row{ display:flex; flex-direction:column; gap:8px; position:relative; }
+    .form-row{ display:flex; flex-direction:column; gap:8px; position:relative }
     .form-row + .form-row{ margin-top:12px }
     .row-split{ display:flex; gap:10px; flex-wrap:wrap }
-    .row-split .form-row{ flex:1; min-width: 180px }
+    .row-split .form-row{ flex:1; min-width:180px }
     .label{ font-size:13px; color:rgba(255,255,255,.75) }
-    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; width:100%; }
+    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; width:100% }
     .input:focus{ outline:none; box-shadow:0 0 0 3px var(--ring) }
-    .toggle-eye{
-      position:absolute; right:8px; top:32px;
-      border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px;
-      z-index:2;
-    }
+    .toggle-eye{ position:absolute; right:8px; top:32px; border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px; z-index:2 }
     .row-two{ display:flex; gap:10px; flex-wrap:wrap }
     .row-two .btn{ flex:1 }
     .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
@@ -273,18 +212,16 @@
     .btn.primary{ background:#fff; color:#000; border-radius:12px; padding:.95rem 1.15rem; border:1px solid rgba(255,255,255,.22); font-weight:900 }
     .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
 
-    /* Email dropdown */
     .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
-    .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none; }
+    .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none }
     .email-dd.open{ display:block }
-    .email-item{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea; font-size:14px; display:flex; align-items:center; justify-content:space-between; }
-    .email-item:hover, .email-item.active{ background:rgba(255,255,255,.08); }
+    .email-item{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea; font-size:14px; display:flex; align-items:center; justify-content:space-between }
+    .email-item:hover, .email-item.active{ background:rgba(255,255,255,.08) }
     .email-hint{ color:rgba(255,255,255,.55); font-size:12px; margin-left:10px }
 
-    /* Reduced transparency accessibility */
     @media (prefers-reduced-transparency: reduce){
-      .glassbar, .card.video { backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
-      .card.video{ background: rgba(22,24,30,.9); }
+      .glassbar, .card.video { backdrop-filter:none !important; -webkit-backdrop-filter:none !important }
+      .card.video{ background: rgba(22,24,30,.9) }
     }
   </style>
 </head>
@@ -380,7 +317,10 @@
           <button id="loginBtn" class="btn primary" type="submit">Login</button>
         </div>
         <p id="loginMsg" class="error-line"></p>
-        <p class="muted-link" id="toSignup">Need an account? Create one</p>
+
+        <!-- NEW: Forgot password -->
+        <p class="muted-link" id="forgotLink" style="margin-top:4px;">Forgot password?</p>
+        <p class="muted-link" id="toSignup" style="margin-top:2px;">Need an account? Create one</p>
       </form>
     </div>
   </div>
@@ -397,7 +337,6 @@
       <div class="divider"></div>
 
       <form id="sheetForm" class="sheet-body" onsubmit="return false;">
-        <!-- Names -->
         <div class="form-row">
           <label class="label" for="sheetDisplay">Display name</label>
           <input id="sheetDisplay" class="input" type="text" required placeholder="Your public name" autocomplete="nickname" />
@@ -414,14 +353,12 @@
           </div>
         </div>
 
-        <!-- Email -->
         <div class="form-row">
           <label class="label" for="sheetEmail">Email</label>
           <input id="sheetEmail" class="input" type="email" required placeholder="you@example.com" autocomplete="email" />
           <div id="errEmail" class="error-line"></div>
         </div>
 
-        <!-- Passwords -->
         <div class="form-row">
           <label class="label" for="sheetPass">Password</label>
           <input id="sheetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
@@ -446,19 +383,71 @@
     </div>
   </div>
 
+  <!-- NEW: RESET PASSWORD SHEET -->
+  <div id="resetSheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <h3>Reset your password</h3>
+        <button class="close" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="divider"></div>
+
+      <form id="resetForm" class="sheet-body" onsubmit="return false;">
+        <p class="muted" style="margin:0">Enter a new password for your account.</p>
+
+        <div class="form-row">
+          <label class="label" for="resetPass">New password</label>
+          <input id="resetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="resetPass" aria-label="Show password">Show</button>
+        </div>
+
+        <div class="form-row">
+          <label class="label" for="resetPass2">Confirm new password</label>
+          <input id="resetPass2" class="input" type="password" required placeholder="Re-enter password" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="resetPass2" aria-label="Show password">Show</button>
+          <div id="resetErr" class="error-line"></div>
+        </div>
+
+        <div class="row-two">
+          <button id="resetBtn" class="btn primary" type="submit">Update password</button>
+        </div>
+
+        <p id="resetMsg" class="info-line"></p>
+      </form>
+    </div>
+  </div>
+
   <!-- Inline JS -->
   <script type="module">
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
     const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
+
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Footer year
     const y = document.getElementById("year"); if (y) y.textContent = new Date().getFullYear();
 
-    // Video embed
+    // ---------- Helpers ----------
+    function openSheet(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
+    function closeSheet(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
+    function togglePassword(btn){
+      const id = btn.getAttribute('data-toggle');
+      const input = document.getElementById(id);
+      if(!input) return;
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.textContent = showing ? 'Show' : 'Hide';
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    }
+    document.querySelectorAll('.toggle-eye').forEach(btn=>{
+      btn.addEventListener('click', ()=> togglePassword(btn));
+    });
+
+    // ---------- Video ----------
     function toEmbed(url){
       try{
         const u=new URL(url);
@@ -495,7 +484,7 @@
       btn.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
     })();
 
-    // Email suggestions
+    // ---------- Email suggestions ----------
     (function(){
       const input = document.getElementById('emailInput');
       const dd    = document.getElementById('emailDropdown');
@@ -535,13 +524,11 @@
       document.addEventListener('click', e=>{ if(!dd.contains(e.target) && e.target !== input){ dd.classList.remove('open'); activeIndex=-1; }});
     })();
 
-    // ===== SESSION/UI =====
-    const authLink   = document.getElementById('authLink');
-    const loginSheet = document.getElementById('loginSheet');
-    const signupSheet= document.getElementById('signupSheet');
-
-    function openSheet(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
-    function closeSheet(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
+    // ---------- Auth UI ----------
+    const authLink    = document.getElementById('authLink');
+    const loginSheet  = document.getElementById('loginSheet');
+    const signupSheet = document.getElementById('signupSheet');
+    const resetSheet  = document.getElementById('resetSheet');
 
     function setAuthUI(session){
       if(session?.user){
@@ -561,34 +548,23 @@
     document.addEventListener('click', (e)=>{
       if(e.target.matches('#loginSheet [data-close]'))  closeSheet(loginSheet);
       if(e.target.matches('#signupSheet [data-close]')) closeSheet(signupSheet);
+      if(e.target.matches('#resetSheet [data-close]'))  closeSheet(resetSheet);
     });
     document.addEventListener('keydown', (e)=>{
       if(e.key==='Escape'){
         if(!loginSheet.classList.contains('hidden'))  closeSheet(loginSheet);
         if(!signupSheet.classList.contains('hidden')) closeSheet(signupSheet);
+        if(!resetSheet.classList.contains('hidden'))  closeSheet(resetSheet);
       }
     });
 
-    // Toggle eye buttons
-    document.querySelectorAll('.toggle-eye').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const id = btn.getAttribute('data-toggle');
-        const input = document.getElementById(id);
-        if(!input) return;
-        const showing = input.type === 'text';
-        input.type = showing ? 'password' : 'text';
-        btn.textContent = showing ? 'Show' : 'Hide';
-        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-      });
-    });
-
-    // ===== LOGIN =====
-    const loginForm = document.getElementById('loginForm');
-    const loginEmail= document.getElementById('loginEmail');
-    const loginPass = document.getElementById('loginPass');
-    const loginBtn  = document.getElementById('loginBtn');
-    const loginMsg  = document.getElementById('loginMsg');
-    const toSignup  = document.getElementById('toSignup');
+    // ---------- Login ----------
+    const loginForm  = document.getElementById('loginForm');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPass  = document.getElementById('loginPass');
+    const loginBtn   = document.getElementById('loginBtn');
+    const loginMsg   = document.getElementById('loginMsg');
+    const toSignup   = document.getElementById('toSignup');
 
     toSignup.addEventListener('click', ()=>{
       closeSheet(loginSheet); openSheet(signupSheet);
@@ -619,7 +595,24 @@
       }
     });
 
-    // ===== SIGNUP + USERNAME RESERVE + STRIPE =====
+    // ---------- Forgot password (send email) ----------
+    const forgotLink = document.getElementById('forgotLink');
+    forgotLink.addEventListener('click', async ()=>{
+      loginMsg.textContent = "";
+      const email = (loginEmail.value || "").trim();
+      if(!email){ loginMsg.textContent = "Enter your email above first."; return; }
+      try{
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin  // comes back here
+        });
+        if(error) throw error;
+        loginMsg.textContent = "Reset link sent. Check your email.";
+      }catch(err){
+        loginMsg.textContent = err?.message || "Could not send reset email.";
+      }
+    });
+
+    // ---------- Signup + Stripe + username ----------
     const openSignupBtn = document.getElementById('openSignup');
     const toLogin       = document.getElementById('toLogin');
 
@@ -708,7 +701,7 @@
         }
       }
 
-      // 2) Reserve username (DB unique + reserved-name triggers enforce it)
+      // 2) Save profile
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
@@ -743,13 +736,60 @@
         return;
       }
 
-      // 3) Proceed to Stripe hosted Checkout link
+      // 3) Stripe Checkout link
       payBtn.textContent = "Redirecting…";
       window.location.href = STRIPE_LINK;
     });
 
-    // Auth UI init
-    supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
+    // ---------- Reset password screen logic ----------
+    const resetForm = document.getElementById('resetForm');
+    const resetPass = document.getElementById('resetPass');
+    const resetPass2= document.getElementById('resetPass2');
+    const resetBtn  = document.getElementById('resetBtn');
+    const resetErr  = document.getElementById('resetErr');
+    const resetMsg  = document.getElementById('resetMsg');
+
+    function showResetSheet(){
+      openSheet(resetSheet);
+      setTimeout(()=> resetPass?.focus(), 0);
+    }
+
+    // If Supabase returns to this page after user clicks the email link:
+    supabase.auth.onAuthStateChange(async (event, session)=>{
+      setAuthUI(session);
+      if(event === "PASSWORD_RECOVERY"){
+        // Supabase just confirmed recovery session; show reset UI.
+        showResetSheet();
+      }
+    });
+
+    // Also handle direct URL with #type=recovery (just in case)
+    (function checkHashForRecovery(){
+      const hash = window.location.hash || "";
+      if(hash.includes("type=recovery")) showResetSheet();
+    })();
+
+    resetForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      resetErr.textContent = ""; resetMsg.textContent = "";
+      const p1 = resetPass.value || "";
+      const p2 = resetPass2.value || "";
+      if(p1.length < 8){ resetErr.textContent = "Password must be at least 8 characters."; return; }
+      if(p1 !== p2){ resetErr.textContent = "Passwords don’t match."; return; }
+      resetBtn.disabled = true; resetBtn.textContent = "Updating…";
+      try{
+        // This uses the current recovery session from the email link.
+        const { error } = await supabase.auth.updateUser({ password: p1 });
+        if(error) throw error;
+        resetMsg.textContent = "Password updated. You can now log in.";
+      }catch(err){
+        resetErr.textContent = err?.message || "Could not update password.";
+      }finally{
+        resetBtn.disabled = false; resetBtn.textContent = "Update password";
+      }
+    });
+
+    // Init
     refreshSessionUI();
   </script>
 </body>
