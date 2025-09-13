@@ -12,7 +12,11 @@
   <link rel="shortcut icon" href="/favicon.ico" />
   <meta name="theme-color" content="#000000" />
 
-  <!-- Load Sansation font pack -->
+  <!-- Preload commonly used weights (TTF here; WOFF2 later if you convert) -->
+  <link rel="preload" href="/fonts/Sansation-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/fonts/Sansation-Bold.ttf" as="font" type="font/ttf" crossorigin>
+
+  <!-- Load font map -->
   <link rel="stylesheet" href="/fonts/fonts.css" />
 
   <!-- Site styles -->
