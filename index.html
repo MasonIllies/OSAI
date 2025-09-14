@@ -22,22 +22,42 @@
 
   <style>
     /* =======================
-       OBSIDIAN VIDEO CARD + COLOR SPLASH
+       OBSIDIAN SLAB (3D, behind video)
+       + Mobile type & proportionate borders
        ======================= */
 
     :root{
       --obsidian-0:#050607;
       --obsidian-1:#0a0b0d;
       --obsidian-2:#0f1115;
+      --obsidian-edge:#1a1d22;
       --obsidian-stroke: rgba(255,255,255,.06);
       --obsidian-hi: rgba(255,255,255,.08);
       --obsidian-whisper: rgba(255,255,255,.03);
     }
 
+    /* Constrain hero text width so lines don’t get too long */
+    .container.hero{
+      max-width: min(980px, 92vw);
+      margin: 0 auto;
+    }
+    .hero-title{
+      max-width: 22ch;                /* shorter lines */
+      line-height: 1.05;
+      letter-spacing: .002em;
+      font-size: clamp(28px, 5.2vw, 56px);
+    }
+    .lede{
+      max-width: 60ch;
+      font-size: clamp(14px, 2.2vw, 18px);
+      line-height: 1.35;
+    }
+
+    /* Card as a 3D space */
     .card.video{
       position: relative;
-      border-radius: 16px;
-      padding: 14px;
+      border-radius: clamp(16px, 4vw, 20px);
+      padding: clamp(12px, 3.6vw, 14px);
       background:
         linear-gradient(180deg, var(--obsidian-whisper), transparent),
         var(--obsidian-2);
@@ -49,61 +69,111 @@
         inset 0 1px 0 var(--obsidian-hi),
         inset 0 -1px 0 rgba(0,0,0,.85);
       overflow: hidden;
+
+      /* 3D context */
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      will-change: transform;
     }
-    /* no rim glow */
     .card.video::before{ content:none; }
     .card.video::after{
       content:"";
-      position:absolute; left:1px; right:1px; top:1px; height:22px; border-radius: 15px;
+      position:absolute; left:1px; right:1px; top:1px;
+      height: clamp(18px, 4.5vw, 22px);
+      border-radius: calc(clamp(16px, 4vw, 20px) - 1px);
       background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0));
       filter: blur(.3px);
       pointer-events:none;
       opacity:.7;
+      z-index:3;
+      transform: translateZ(1px);
     }
 
-    /* ==== Color Splash Layer (restored, sits BEHIND the frame) ==== */
-    .card.video .splash{
-      position:absolute; inset:-20%;
+    /* The 3D Obsidian slab behind the video frame */
+    .obsidian-slab{
+      position:absolute;
+      inset: -22px -22px clamp(-34px, -9vw, -26px) -22px; /* deeper on small screens */
+      border-radius: clamp(24px, 6vw, 28px);
+      z-index:0;
       pointer-events:none;
-      z-index:0;                 /* behind frame */
-      mix-blend-mode:screen;     /* gentle add, respects black */
-      opacity:.26;               /* tasteful by default */
-      filter: blur(60px) saturate(140%);
-      /* defaults, can be overridden via style vars set by JS */
-      --s1:#7b5cff; --s2:#00ffd1; --s3:#ff5e7e;
+      will-change: transform, opacity;
+
       background:
-        radial-gradient(50% 40% at 20% 20%, var(--s1), transparent 65%),
-        radial-gradient(60% 50% at 80% 30%, var(--s2), transparent 70%),
-        radial-gradient(70% 60% at 50% 100%, var(--s3), transparent 70%);
-      animation: splash-drift 16s ease-in-out infinite alternate;
+        radial-gradient(120% 160% at 50% 10%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%),
+        repeating-linear-gradient(25deg, rgba(255,255,255,.03) 0 2px, rgba(255,255,255,0) 2px 10px),
+        repeating-linear-gradient(-18deg, rgba(255,255,255,.015) 0 1px, rgba(255,255,255,0) 1px 12px),
+        var(--obsidian-0);
+      box-shadow:
+        0 40px 90px rgba(0,0,0,.85),
+        0 12px 30px rgba(0,0,0,.65),
+        inset 0 1px 0 rgba(255,255,255,.06),
+        inset 0 -1px 0 rgba(0,0,0,.9);
+      border: 1px solid var(--obsidian-edge);
+
+      -webkit-mask:
+        radial-gradient(120% 140% at 50% -20% , rgba(0,0,0,0) 0 35%, rgba(0,0,0,1) 60%),
+        linear-gradient(#000,#000);
+      mask:
+        radial-gradient(120% 140% at 50% -20% , rgba(0,0,0,0) 0 35%, rgba(0,0,0,1) 60%),
+        linear-gradient(#000,#000);
+
+      transform: translateZ(-18px) rotateX(0deg) rotateY(0deg);
     }
-    @keyframes splash-drift{
-      0%   { transform: translate3d(-1%, -1%, 0) rotate(0.5deg) scale(1.02); opacity:.24; }
-      100% { transform: translate3d(1%, 1%, 0) rotate(-0.5deg) scale(1.04); opacity:.30; }
+    .obsidian-slab::before{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: inherit;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 45%) top/100% 24px no-repeat,
+        linear-gradient(0deg, rgba(255,255,255,.03), rgba(255,255,255,0) 55%) bottom/100% 30px no-repeat;
+      mix-blend-mode: screen;
+      opacity:.7;
+    }
+    .obsidian-slab::after{
+      content:"";
+      position:absolute;
+      left:-10%; right:-10%; top:-20%; bottom:40%;
+      border-radius: 40px;
+      background:
+        linear-gradient( 60deg, rgba(255,255,255,0) 35%,
+                               rgba(255,255,255,.04) 50%,
+                               rgba(255,255,255,0) 65%);
+      filter: blur(10px);
+      mix-blend-mode: screen;
+      opacity:.8;
+      transform: translateZ(2px);
     }
 
-    /* Video */
-    .video .intro{
-      position:absolute; top:14px; left:14px;
-      z-index: 2;
-      border: 1px solid var(--obsidian-stroke);
-      background: rgba(0,0,0,.6);
+    /* Pill label — doubled size */
+    .pill.intro{
+      font-weight: 700;
+      font-size: clamp(16px, 2.8vw, 24px); /* ~2x the previous ~12px */
+      letter-spacing: .08em;
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      transform: translateZ(2px);
     }
+
+    /* Video frame: proportional border/radius on mobile */
     .video-frame{
       aspect-ratio:16/9; width:100%;
       background:
         radial-gradient(120% 140% at 50% 0%,
           rgba(255,255,255,.04),
           rgba(255,255,255,0) 60%),
-        var(--obsidian-0);
-      border-radius: 12px; overflow: hidden;
-      border: 1px solid var(--obsidian-stroke);
+        var(--obsidian-1);
+      border-radius: clamp(12px, 3.5vw, 14px);
+      overflow: hidden;
+      border: clamp(1px, 0.5vw, 2px) solid var(--obsidian-stroke); /* scales */
       box-shadow:
         inset 0 2px 10px rgba(0,0,0,.9),
         0 16px 44px rgba(0,0,0,.65);
       position:relative;
-      z-index:1; /* above splash */
+      z-index:2;
+      transform: translateZ(0);
+      will-change: transform;
     }
+
     .play{
       position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
       gap:10px; background: transparent; color: rgba(255,255,255,.92); border:0; cursor:pointer; font-weight:700;
@@ -111,64 +181,31 @@
     }
     .play:hover{ transform: translateY(-1px); }
     .play-dot{
-      width: 56px; height: 56px; border-radius: 9999px;
+      width: clamp(48px, 12vw, 56px);
+      height: clamp(48px, 12vw, 56px);
+      border-radius: 9999px;
       display:flex; align-items:center; justify-content:center;
       background: radial-gradient(circle at 30% 30%,
                     rgba(255,255,255,.96),
                     rgba(255,255,255,.86));
-      color:#000; font-size: 20px; font-weight: 800;
+      color:#000; font-size: clamp(18px, 4.5vw, 20px); font-weight: 800;
       box-shadow:
         0 10px 22px rgba(0,0,0,.55),
         inset 0 1px 0 rgba(255,255,255,.65);
     }
-    .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.6) }
+    .play-label{ font-size: clamp(12px, 2.8vw, 13px); text-shadow: 0 1px 0 rgba(0,0,0,.6) }
 
-    /* ---- MODALS: solid, opaque, black ---- */
-    .sheet{ position:fixed; inset:0; z-index:1000; }
-    .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.65); }
-    .sheet-card{
-      position:relative; z-index:1;
-      margin: 8vh auto 0 auto; max-width:560px; border-radius:16px;
-      padding:20px;
-      background:#000 !important;
-      border:1px solid #222 !important;
-      box-shadow:0 30px 80px rgba(0,0,0,.8);
+    /* Mobile tightening — same layout, just smaller */
+    @media (max-width: 700px){
+      .container.hero{ max-width: 92vw; }
+      .hero-title{ max-width: 18ch; }
+      .lede{ max-width: 40ch; }
+      .after-video .pills{ row-gap: 6px; }
     }
-    .sheet h3{ margin:0; font-size:22px }
-    .sheet .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
-    .sheet .muted-link{ color:rgba(255,255,255,.7); font-size:13px; text-decoration:underline; cursor:pointer }
-
-    .form-row{ display:flex; flex-direction:column; gap:8px; position:relative; }
-    .form-row + .form-row{ margin-top:12px }
-    .row-split{ display:flex; gap:10px; flex-wrap:wrap }
-    .row-split .form-row{ flex:1; min-width: 180px }
-    .label{ font-size:13px; color:rgba(255,255,255,.75) }
-    .input{ border-radius:12px; padding:12px 44px 12px 14px; border:1px solid rgba(255,255,255,.22); background:#fff; color:#000; font:inherit; width:100%; }
-    .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35) }
-    .toggle-eye{
-      position:absolute; right:8px; top:32px;
-      border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px;
-      z-index:2;
-    }
-    .row-two{ display:flex; gap:10px; flex-wrap:wrap }
-    .row-two .btn{ flex:1 }
-    .error-line{ color:#ff8a8a; font-size:12px; min-height:16px }
-    .info-line{ color:#8ab4ff; font-size:12px; min-height:16px }
-
-    .btn.primary{ background:#fff; color:#000; border-radius:12px; padding:.9rem 1.1rem; border:1px solid rgba(255,255,255,.22) }
-    .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
-
-    /* Email dropdown */
-    .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
-    .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none; }
-    .email-dd.open{ display:block }
-    .email-item{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#eaeaea; font-size:14px; display:flex; align-items:center; justify-content:space-between; }
-    .email-item:hover, .email-item.active{ background:rgba(255,255,255,.08); }
-    .email-hint{ color:rgba(255,255,255,.55); font-size:12px; margin-left:10px }
   </style>
 </head>
 
-<!-- Checkout bootstrap -->
+<!-- Checkout bootstrap (unchanged) -->
 <script type="module">
   const CHECKOUT_PRICE_ID = "price_1S6eI9J0uj5iBUehTf0MCJyr";
   const SUCCESS_URL = `https://www.osai.llc/?success=1`;
@@ -246,14 +283,14 @@
       <p class="tiny-note">Welcome to OSAI. Nice to meet you.</p>
       <p class="ps">p.s. Fuck you Google.</p>
 
-      <!-- Video card with color splash -->
-      <div class="card video" id="videoCard" data-splash="#7b5cff,#00ffd1,#ff5e7e">
+      <!-- Video card with 3D obsidian slab -->
+      <div class="card video" id="videoCard">
         <span class="pill intro">INTRODUCTION VIDEO</span>
 
-        <!-- color splash (behind) -->
-        <div class="splash" id="videoSplash" aria-hidden="true"></div>
+        <!-- 3D slab (behind) -->
+        <div class="obsidian-slab" id="obsidianSlab" aria-hidden="true"></div>
 
-        <!-- frame (above splash) -->
+        <!-- frame (above slab) -->
         <div class="video-frame" id="videoFrame">
           <button id="playBtn" class="play" aria-label="Play introduction video"
             data-video="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
@@ -418,12 +455,12 @@
     </div>
   </div>
 
-  <!-- Inline JS -->
+  <!-- Inline JS (unchanged app logic + 3D tilt) -->
   <script type="module">
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404"; // kept for completeness
+    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
 
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -466,21 +503,6 @@
       }
       btn.addEventListener("click", inject);
       btn.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
-    })();
-
-    // ===== Color Splash init (reads data-splash from the card) =====
-    (function(){
-      const splash = document.getElementById('videoSplash');
-      const card   = document.getElementById('videoCard');
-      if(!splash || !card) return;
-      const raw = (card.getAttribute('data-splash') || '').trim();
-      const cols = raw.split(',').map(s=>s.trim()).filter(Boolean);
-      const vars = ['--s1','--s2','--s3'];
-      cols.forEach((c,i)=> splash.style.setProperty(vars[i%vars.length], c));
-      // if only 1–2 colors provided, cycle them
-      if(cols.length && cols.length < 3){
-        for(let i=cols.length;i<3;i++) splash.style.setProperty(vars[i], cols[i%cols.length]);
-      }
     })();
 
     // Email suggestions
@@ -799,6 +821,56 @@
         resetBtn.disabled = false; resetBtn.textContent = "Update password";
       }
     });
+
+    // ===== 3D tilt/parallax (tasteful, disabled for reduced-motion) =====
+    (function(){
+      const card   = document.getElementById('videoCard');
+      const slab   = document.getElementById('obsidianSlab');
+      const frame  = document.getElementById('videoFrame');
+      if(!card || !slab || !frame) return;
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(prefersReduced) return;
+
+      let raf = null;
+      let rx=0, ry=0, prx=0, pry=0;
+
+      function onMove(e){
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top)  / rect.height;
+        const max = 6;
+        ry = (x - 0.5) * max;
+        rx = (0.5 - y) * (max*0.6);
+
+        if(raf===null){
+          raf = requestAnimationFrame(apply);
+        }
+      }
+      function onLeave(){
+        rx=0; ry=0;
+        if(raf===null) raf = requestAnimationFrame(apply);
+      }
+      function lerp(a,b,t){ return a + (b-a)*t; }
+
+      function apply(){
+        prx = lerp(prx, rx, 0.12);
+        pry = lerp(pry, ry, 0.12);
+
+        frame.style.transform = `translateZ(0px) rotateX(${prx}deg) rotateY(${pry}deg)`;
+        slab.style.transform  = `translateZ(-18px) rotateX(${prx*0.6}deg) rotateY(${pry*0.6}deg)`;
+        card.style.transform  = `rotateX(${prx*0.15}deg) rotateY(${pry*0.15}deg)`;
+
+        if(Math.abs(prx-rx) > 0.01 || Math.abs(pry-ry) > 0.01){
+          raf = requestAnimationFrame(apply);
+        }else{
+          raf = null;
+        }
+      }
+
+      card.addEventListener('pointermove', onMove);
+      card.addEventListener('pointerleave', onLeave);
+    })();
 
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
     refreshSessionUI();
