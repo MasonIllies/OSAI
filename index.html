@@ -21,49 +21,67 @@
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
-    /* Elegant glass for video card */
+    /* =======================
+       OBSIDIAN VIDEO CARD
+       (clean rewrite: no glow rim)
+       ======================= */
+
+    :root{
+      --obsidian-0:#050607;
+      --obsidian-1:#0a0b0d;
+      --obsidian-2:#0f1115;
+      --obsidian-stroke: rgba(255,255,255,.06);
+      --obsidian-hi: rgba(255,255,255,.08);
+      --obsidian-whisper: rgba(255,255,255,.03);
+    }
+
+    /* Elegant glass for video card — obsidian */
     .card.video{
       position: relative;
       border-radius: 16px;
       padding: 14px;
-      background: rgba(255,255,255,.035);
-      border: 1px solid rgba(255,255,255,.10);
+      background:
+        linear-gradient(180deg, var(--obsidian-whisper), transparent),
+        var(--obsidian-2);
+      border: 1px solid var(--obsidian-stroke);
       backdrop-filter: blur(14px) saturate(140%);
       -webkit-backdrop-filter: blur(14px) saturate(140%);
-      box-shadow: 0 12px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04);
+      box-shadow:
+        0 28px 80px rgba(0,0,0,.78),
+        inset 0 1px 0 var(--obsidian-hi),
+        inset 0 -1px 0 rgba(0,0,0,.85);
       overflow: hidden;
     }
-    .card.video::before{
-      content:"";
-      position:absolute; inset:0; pointer-events:none;
-      border-radius: 16px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0)) top/100% 1px no-repeat,
-        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0)) top/100% 100%;
-      mix-blend-mode: screen;
-      opacity:.6;
-    }
+    /* remove decorative rim entirely; keep a subtle top glare only */
+    .card.video::before{ content:none; }
     .card.video::after{
       content:"";
-      position:absolute; left:1px; right:1px; top:1px; height:32px; border-radius: 15px;
-      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
-      filter: blur(0.2px);
+      position:absolute; left:1px; right:1px; top:1px; height:22px; border-radius: 15px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0));
+      filter: blur(.3px);
       pointer-events:none;
+      opacity:.7;
     }
 
     /* Video */
     .video .intro{
       position:absolute; top:14px; left:14px;
       z-index: 2;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(0,0,0,.45);
+      border: 1px solid var(--obsidian-stroke);
+      background: rgba(0,0,0,.6);
     }
     .video-frame{
       aspect-ratio:16/9; width:100%;
-      background: rgba(255,255,255,.02);
+      background:
+        radial-gradient(120% 140% at 50% 0%,
+          rgba(255,255,255,.04),
+          rgba(255,255,255,0) 60%),
+        var(--obsidian-0);
       border-radius: 12px; overflow: hidden;
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      border: 1px solid var(--obsidian-stroke);
+      box-shadow:
+        inset 0 2px 10px rgba(0,0,0,.9),
+        0 16px 44px rgba(0,0,0,.65);
       position:relative;
     }
     .play{
@@ -75,11 +93,15 @@
     .play-dot{
       width: 56px; height: 56px; border-radius: 9999px;
       display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(closest-side, rgba(255,255,255,.98), rgba(255,255,255,.92));
+      background: radial-gradient(circle at 30% 30%,
+                    rgba(255,255,255,.96),
+                    rgba(255,255,255,.86));
       color:#000; font-size: 20px; font-weight: 800;
-      box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
+      box-shadow:
+        0 10px 22px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.65);
     }
-    .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.45) }
+    .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.6) }
 
     /* ---- MODALS: solid, opaque, black ---- */
     .sheet{ position:fixed; inset:0; z-index:1000; }
@@ -128,7 +150,7 @@
 
 <!-- ADDITIVE: Checkout bootstrap -->
 <script type="module">
-  const CHECKOUT_PRICE_ID = "price_1S6eI9J0uj5iBUehTf0MCJyr";   // your live $20/mo price
+  const CHECKOUT_PRICE_ID = "price_1S6eI9J0uj5iBUehTf0MCJyr";
   const SUCCESS_URL = `https://www.osai.llc/?success=1`;
   const CANCEL_URL  = `https://www.osai.llc/?canceled=1`;
 
@@ -269,6 +291,8 @@
           <button id="loginBtn" class="btn primary" type="submit">Login</button>
         </div>
         <p id="loginMsg" class="error-line"></p>
+        <!-- Forgot password trigger -->
+        <p class="muted-link" id="forgotLink">Forgot password?</p>
         <p class="muted-link" id="toSignup">Need an account? Create one</p>
       </form>
     </div>
@@ -335,6 +359,41 @@
     </div>
   </div>
 
+  <!-- RESET PASSWORD SHEET -->
+  <div id="resetSheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <h3>Reset your password</h3>
+        <button class="close" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="divider"></div>
+
+      <form id="resetForm" class="sheet-body" onsubmit="return false;">
+        <p class="muted" style="margin:0">Enter a new password for your account.</p>
+
+        <div class="form-row">
+          <label class="label" for="resetPass">New password</label>
+          <input id="resetPass" class="input" type="password" required placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="resetPass" aria-label="Show password">Show</button>
+        </div>
+
+        <div class="form-row">
+          <label class="label" for="resetPass2">Confirm new password</label>
+          <input id="resetPass2" class="input" type="password" required placeholder="Re-enter password" autocomplete="new-password" minlength="8" />
+          <button type="button" class="toggle-eye" data-toggle="resetPass2" aria-label="Show password">Show</button>
+          <div id="resetErr" class="error-line"></div>
+        </div>
+
+        <div class="row-two">
+          <button id="resetBtn" class="btn primary" type="submit">Update password</button>
+        </div>
+
+        <p id="resetMsg" class="info-line"></p>
+      </form>
+    </div>
+  </div>
+
   <!-- Inline JS -->
   <script type="module">
     // --------- SUPABASE (public) ----------
@@ -346,7 +405,7 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Footer year
-    document.getElementById("year")?.append(new Date().getFullYear());
+    const y = document.getElementById("year"); if (y) y.textContent = new Date().getFullYear();
 
     // Video embed
     function toEmbed(url){
@@ -429,6 +488,7 @@
     const authLink   = document.getElementById('authLink');
     const loginSheet = document.getElementById('loginSheet');
     const signupSheet= document.getElementById('signupSheet');
+    const resetSheet = document.getElementById('resetSheet');
 
     function openSheet(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
     function closeSheet(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
@@ -447,15 +507,17 @@
       setAuthUI(session);
     }
 
-    // Close handlers for both modals
+    // Close handlers for all modals
     document.addEventListener('click', (e)=>{
       if(e.target.matches('#loginSheet [data-close]'))  closeSheet(loginSheet);
       if(e.target.matches('#signupSheet [data-close]')) closeSheet(signupSheet);
+      if(e.target.matches('#resetSheet [data-close]'))  closeSheet(resetSheet);
     });
     document.addEventListener('keydown', (e)=>{
       if(e.key==='Escape'){
         if(!loginSheet.classList.contains('hidden'))  closeSheet(loginSheet);
         if(!signupSheet.classList.contains('hidden')) closeSheet(signupSheet);
+        if(!resetSheet.classList.contains('hidden'))  closeSheet(resetSheet);
       }
     });
 
@@ -479,10 +541,27 @@
     const loginBtn  = document.getElementById('loginBtn');
     const loginMsg  = document.getElementById('loginMsg');
     const toSignup  = document.getElementById('toSignup');
+    const forgotLink= document.getElementById('forgotLink');
 
     toSignup.addEventListener('click', ()=>{
       closeSheet(loginSheet); openSheet(signupSheet);
       setTimeout(()=> document.getElementById('sheetEmail')?.focus(), 0);
+    });
+
+    // Send reset email
+    forgotLink.addEventListener('click', async ()=>{
+      loginMsg.textContent = "";
+      const email = (loginEmail.value || "").trim();
+      if(!email){ loginMsg.textContent = "Enter your email above first."; return; }
+      try{
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        });
+        if(error) throw error;
+        loginMsg.textContent = "Reset link sent. Check your email.";
+      }catch(err){
+        loginMsg.textContent = err?.message || "Could not send reset email.";
+      }
     });
 
     loginForm.addEventListener('submit', async (e)=>{
@@ -539,48 +618,6 @@
 
     function nonEmpty(v){ return (v||"").trim().length >= 1; }
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // ===== Username availability / reserved pre-check (ADDED) =====
-    let _unameTimer = null;
-    let _unameLast   = '';
-    let _unameState  = { taken:false, reserved:false, ok:false };
-
-    async function checkUsernameAvailability(nameRaw) {
-      const wanted = (nameRaw || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
-      if (!wanted || wanted.length < 3) {
-        _unameState = { taken:false, reserved:false, ok:false };
-        return _unameState;
-      }
-      const { data, error } = await supabase.rpc('username_status', { u: wanted });
-      if (error) {
-        console.warn('[OSAI] username_status error:', error);
-        _unameState = { taken:false, reserved:false, ok:false };
-        return _unameState;
-      }
-      _unameState = { taken: !!data?.taken, reserved: !!data?.reserved, ok: !(data?.taken || data?.reserved) };
-      return _unameState;
-    }
-
-    async function validateUsernameInline() {
-      const normalized = (sheetDisplay.value || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0,20);
-      clearTimeout(_unameTimer);
-      if (normalized === _unameLast) return;
-      _unameLast = normalized;
-
-      if (!normalized) { authMsg.textContent = ''; payBtn.disabled = true; return; }
-      if (normalized.length < 3) { authMsg.textContent = 'Username must be at least 3 characters.'; payBtn.disabled = true; return; }
-
-      _unameTimer = setTimeout(async () => {
-        const res = await checkUsernameAvailability(normalized);
-        if (res.reserved) { authMsg.textContent = 'That username is reserved.'; payBtn.disabled = true; return; }
-        if (res.taken)    { authMsg.textContent = 'That username is already taken.'; payBtn.disabled = true; return; }
-        // let the generic validator re-enable the button when all fields valid
-        if (validateSignup()) { authMsg.textContent = ''; payBtn.disabled = false; }
-      }, 250);
-    }
-    // attach inline check (ADDED)
-    document.getElementById('sheetDisplay')?.addEventListener('input', validateUsernameInline);
-
     function validateSignup(){
       let ok = true;
       if(!nonEmpty(sheetDisplay.value)) ok = false;
@@ -613,6 +650,7 @@
       const email = sheetEmail.value.trim();
       const pass  = sheetPass.value;
 
+      // 1) Create or sign-in Supabase user
       const { error: signUpErr } = await supabase.auth.signUp({
         email,
         password: pass,
@@ -639,6 +677,7 @@
         }
       }
 
+      // 2) Reserve username
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
@@ -650,19 +689,6 @@
       if (wanted.length < 3) {
         payBtn.disabled = false; payBtn.textContent = "PAY";
         authMsg.textContent = "Username must be 3–20 chars (a–z, 0–9, _).";
-        return;
-      }
-
-      // ADDED: preflight username check to avoid server error
-      const status = await checkUsernameAvailability(wanted);
-      if (status.reserved) {
-        payBtn.disabled = false; payBtn.textContent = "PAY";
-        authMsg.textContent = "That username is reserved. Try another.";
-        return;
-      }
-      if (status.taken) {
-        payBtn.disabled = false; payBtn.textContent = "PAY";
-        authMsg.textContent = "That username is already taken.";
         return;
       }
 
@@ -686,34 +712,58 @@
         return;
       }
 
-      // ---- OSAI ADDITIVE: real Stripe Checkout Session (no removals) ----
-      await (async () => {
-        try {
-          const resp = await fetch("/api/create-checkout-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              priceId: "price_1S6eI9J0uj5iBUehTf0MCJyr",
-              successUrl: "https://www.osai.llc/?success=1",
-              cancelUrl:  "https://www.osai.llc/?canceled=1"
-            })
-          });
-          const json = await resp.json();
-          if (!resp.ok || !json?.url) throw new Error(json?.error || "Checkout init failed.");
-          window.location.href = json.url;
-        } catch (err) {
-          authMsg.textContent = err?.message || "Checkout error.";
-          payBtn.disabled = false; payBtn.textContent = "PAY";
-        }
-      })();
-      return; // keep your original lines intact below
-      // ---- end OSAI ADDITIVE ----
-
-      // Kept for completeness (not executed due to return):
+      // 3) Proceed to Stripe hosted Checkout link (kept fallback)
       payBtn.textContent = "Redirecting…";
       window.location.href = STRIPE_LINK;
     });
 
+    // ---------- Reset password screen ----------
+    const resetForm = document.getElementById('resetForm');
+    const resetPass = document.getElementById('resetPass');
+    const resetPass2= document.getElementById('resetPass2');
+    const resetBtn  = document.getElementById('resetBtn');
+    const resetErr  = document.getElementById('resetErr');
+    const resetMsg  = document.getElementById('resetMsg');
+
+    function showResetSheet(){
+      openSheet(resetSheet);
+      setTimeout(()=> resetPass?.focus(), 0);
+    }
+
+    // Auto-open reset sheet when Supabase returns after email click
+    supabase.auth.onAuthStateChange(async (event, session)=>{
+      setAuthUI(session);
+      if(event === "PASSWORD_RECOVERY"){
+        showResetSheet();
+      }
+    });
+
+    // Also handle direct URL with #type=recovery
+    (function checkHashForRecovery(){
+      const hash = window.location.hash || "";
+      if(hash.includes("type=recovery")) showResetSheet();
+    })();
+
+    resetForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      resetErr.textContent = ""; resetMsg.textContent = "";
+      const p1 = resetPass.value || "";
+      const p2 = resetPass2.value || "";
+      if(p1.length < 8){ resetErr.textContent = "Password must be at least 8 characters."; return; }
+      if(p1 !== p2){ resetErr.textContent = "Passwords don’t match."; return; }
+      resetBtn.disabled = true; resetBtn.textContent = "Updating…";
+      try{
+        const { error } = await supabase.auth.updateUser({ password: p1 });
+        if(error) throw error;
+        resetMsg.textContent = "Password updated. You can now log in.";
+      }catch(err){
+        resetErr.textContent = err?.message || "Could not update password.";
+      }finally{
+        resetBtn.disabled = false; resetBtn.textContent = "Update password";
+      }
+    });
+
+    // Initial auth UI + react to changes
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
     refreshSessionUI();
   </script>
