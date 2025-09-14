@@ -21,7 +21,6 @@
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
-    /* ---- Local tokens for the obsidian slab ---- */
     :root{
       --obsidian-0:#050607;
       --obsidian-1:#0a0b0d;
@@ -32,23 +31,23 @@
       --obsidian-whisper: rgba(255,255,255,.03);
     }
 
-    /* Center the hero and give it a scaling shell so desktop layout remains intact on mobile */
+    /* Scaled desktop composition that shrinks as ONE unit */
     .hero-shell{ width:100%; display:flex; justify-content:center; overflow:hidden; }
     .hero-scale{ width:980px; transform-origin: top center; will-change: transform; }
 
-    /* EXACTLY two lines — only break where you put <br> */
+    /* Lock to exactly two lines (breaks only where you place <br/>) */
     .hero-title{
-      white-space: pre;            /* only break at <br> */
+      white-space: pre;
       display:inline-block;
       line-height:1.05;
       letter-spacing:.002em;
-      font-size:56px;              /* base desktop size; the shell scales down */
+      font-size:56px;
       margin:0 0 14px 0;
     }
 
     .lede{ font-size:18px; line-height:1.35; }
 
-    /* ----- Obsidian video card (premium, not “textured stripe”) ----- */
+    /* ----- Obsidian video card ----- */
     .card.video{
       position: relative;
       border-radius: 20px;
@@ -68,7 +67,6 @@
       transform-style: preserve-3d;
       will-change: transform;
     }
-    /* top glass kiss */
     .card.video::after{
       content:"";
       position:absolute; left:1px; right:1px; top:1px; height: 22px; border-radius: 19px;
@@ -77,7 +75,6 @@
       pointer-events:none; z-index:3; transform: translateZ(1px);
     }
 
-    /* Behind-frame obsidian slab (true material read) */
     .obsidian-slab{
       position:absolute; inset: -22px -22px -26px -22px; border-radius: 28px;
       z-index:0; pointer-events:none; will-change: transform, opacity;
@@ -108,7 +105,6 @@
       mix-blend-mode: screen; opacity:.7;
     }
 
-    /* Video frame */
     .video-frame{
       aspect-ratio:16/9; width:100%;
       background:
@@ -122,7 +118,7 @@
       position:relative; z-index:2; transform: translateZ(0);
     }
 
-    /* Doubled label size, stays legible at mobile scale */
+    /* Doubled label size */
     .pill.intro{
       position:absolute; top:14px; left:14px; z-index:4;
       border: 1px solid rgba(255,255,255,.16);
@@ -147,7 +143,7 @@
     }
     .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.6) }
 
-    /* Keep inputs/buttons as-is; hero scales so they preserve proportion */
+    /* Email dropdown (kept) */
     .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
     .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none; }
     .email-dd.open{ display:block }
@@ -215,8 +211,7 @@
   <!-- Main -->
   <main>
     <section class="container hero">
-      <!-- Scaled canvas: desktop composition that shrinks as one unit on smaller widths -->
-      <div class="hero-shell">
+      <div class="hero-shell" id="heroShell">
         <div class="hero-scale" id="heroScale">
           <h1 class="hero-title">
 Not just another shit app built to farm your data<br />
@@ -407,7 +402,7 @@ and trick you into forgetting your subscription.
     // --------- SUPABASE (public) ----------
     const SUPABASE_URL = "https://cnsuyhvkpgtwlpqvwetn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuc3V5aHZrcGd0d2xwcXZ3ZXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4NjY1NzIsImV4cCI6MjA3MjQ0MjU3Mn0.tEPXUtNhZBY8ZLR0jFZtsoWewX62FDHd4QW7C3TVDS0";
-    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404"; // kept for completeness
+    const STRIPE_LINK = "https://buy.stripe.com/bJe4gA1aRcJNaDVeg67g404";
 
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -800,26 +795,46 @@ and trick you into forgetting your subscription.
       card.addEventListener('pointerleave', onLeave);
     })();
 
-    // ===== Fit-to-container hero scaling (prevents any headline cut-off) =====
+    // ===== Safe fit-to-container hero scaling (prevents initial collapse) =====
     (function(){
-      const BASE = 980;                 // must match .hero-scale width
-      const shell = document.querySelector('.hero-shell');
+      const BASE = 980;                           // matches .hero-scale width
+      const shell = document.getElementById('heroShell');
       const scaleEl = document.getElementById('heroScale');
       if(!shell || !scaleEl) return;
 
-      function fitHeroScale(){
-        const cw = shell.clientWidth || shell.getBoundingClientRect().width || window.innerWidth;
-        let s = cw / BASE;
-        if(!Number.isFinite(s) || s <= 0) s = 1;
-        s = Math.min(1, s);            // never upscale (keeps desktop crisp)
-        scaleEl.style.transform = `scale(${s})`;
-        shell.style.height = (scaleEl.offsetHeight * s) + 'px';
+      function computeAvailableWidth(){
+        // Try shell -> parent -> viewport; ensure a sane minimum
+        const parent = shell.parentElement || document.body;
+        const w1 = shell.clientWidth;
+        const w2 = parent ? parent.clientWidth : 0;
+        const w3 = window.innerWidth || 0;
+        const w = Math.max(w1, w2, w3, 1);
+        return w;
       }
 
-      window.addEventListener('load', fitHeroScale, { once: true });
+      function fitHeroScale(){
+        let available = computeAvailableWidth();
+        let s = available / BASE;
+        if(!Number.isFinite(s) || s <= 0) s = 1;
+        s = Math.min(1, s);                      // never upscale
+        scaleEl.style.transform = `scale(${s})`;
+
+        // Use the *visual* height after transform so container never collapses
+        const rect = scaleEl.getBoundingClientRect();
+        const h = Math.max( Math.round(rect.height), Math.round(scaleEl.offsetHeight * s), 1 );
+        shell.style.height = h + 'px';
+      }
+
+      // Run at safe times; defend against early 0-width paints
+      const safeRun = () => { requestAnimationFrame(()=> requestAnimationFrame(fitHeroScale)); };
+
+      window.addEventListener('load', safeRun, { once: true });
       window.addEventListener('resize', fitHeroScale);
-      if('ResizeObserver' in window){ new ResizeObserver(fitHeroScale).observe(shell); }
+      if('ResizeObserver' in window){ new ResizeObserver(fitHeroScale).observe(scaleEl); }
       if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitHeroScale); }
+
+      // Initial
+      safeRun();
     })();
 
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
