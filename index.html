@@ -21,11 +21,6 @@
   <link rel="stylesheet" href="./css/styles.css" />
 
   <style>
-    /* =======================
-       OBSIDIAN SLAB (3D, behind video)
-       + Desktop-locked hero that scales down as a unit
-       ======================= */
-
     :root{
       --obsidian-0:#050607;
       --obsidian-1:#0a0b0d;
@@ -42,39 +37,32 @@
       padding-right: 4vw;
     }
 
-    /* === Desktop-locked hero that scales down on small screens === */
-    /* Exactly two lines using ONE manual <br>; no other wrapping allowed */
+    /* EXACTLY two lines — only break where you put <br> */
     .hero-title{
-      white-space: nowrap;       /* only break at <br> */
+      white-space: pre;          /* << key: only respect explicit breaks */
       display: inline-block;
       line-height: 1.05;
       letter-spacing: .002em;
-      font-size: 56px;           /* desktop base; will scale as a unit */
+      font-size: 56px;           /* desktop base; we scale the whole hero */
       max-width: none;
     }
 
-    /* Shell centers and hides overflow created by transform-scaling */
+    /* Desktop canvas that scales as ONE unit (like T-Mobile) */
     .hero-shell{
       width: 100%;
       display: flex;
       justify-content: center;
-      overflow: hidden;          /* no horizontal scroll while scaled */
+      overflow: hidden;          /* prevent any visual spill while scaling */
     }
-
-    /* This is your desktop-sized canvas. We scale this as a unit. */
     .hero-scale{
-      width: 980px;              /* your desktop design width */
+      width: 980px;              /* BASE width; must match the JS BASE */
       transform-origin: top center;
       will-change: transform;
     }
 
-    .lede{
-      font-size: 18px;
-      line-height: 1.35;
-      max-width: none;
-    }
+    .lede{ font-size: 18px; line-height: 1.35; max-width: none; }
 
-    /* Card as a 3D space */
+    /* ======== Obsidian video card ======== */
     .card.video{
       position: relative;
       border-radius: 20px;
@@ -90,8 +78,6 @@
         inset 0 1px 0 var(--obsidian-hi),
         inset 0 -1px 0 rgba(0,0,0,.85);
       overflow: hidden;
-
-      /* 3D context */
       perspective: 1200px;
       transform-style: preserve-3d;
       will-change: transform;
@@ -99,26 +85,16 @@
     .card.video::before{ content:none; }
     .card.video::after{
       content:"";
-      position:absolute; left:1px; right:1px; top:1px;
-      height: 22px;
+      position:absolute; left:1px; right:1px; top:1px; height: 22px;
       border-radius: 19px;
       background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0));
       filter: blur(.3px);
-      pointer-events:none;
-      opacity:.7;
-      z-index:3;
-      transform: translateZ(1px);
+      pointer-events:none; opacity:.7; z-index:3; transform: translateZ(1px);
     }
 
-    /* The 3D Obsidian slab behind the video frame */
     .obsidian-slab{
-      position:absolute;
-      inset: -22px -22px -26px -22px;
-      border-radius: 28px;
-      z-index:0;
-      pointer-events:none;
-      will-change: transform, opacity;
-
+      position:absolute; inset: -22px -22px -26px -22px; border-radius: 28px;
+      z-index:0; pointer-events:none; will-change: transform, opacity;
       background:
         radial-gradient(120% 160% at 50% 10%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%),
         repeating-linear-gradient(25deg, rgba(255,255,255,.03) 0 2px, rgba(255,255,255,0) 2px 10px),
@@ -130,45 +106,31 @@
         inset 0 1px 0 rgba(255,255,255,.06),
         inset 0 -1px 0 rgba(0,0,0,.9);
       border: 1px solid var(--obsidian-edge);
-
       -webkit-mask:
         radial-gradient(120% 140% at 50% -20% , rgba(0,0,0,0) 0 35%, rgba(0,0,0,1) 60%),
         linear-gradient(#000,#000);
       mask:
         radial-gradient(120% 140% at 50% -20% , rgba(0,0,0,0) 0 35%, rgba(0,0,0,1) 60%),
         linear-gradient(#000,#000);
-
       transform: translateZ(-18px) rotateX(0deg) rotateY(0deg);
     }
     .obsidian-slab::before{
-      content:"";
-      position:absolute; inset:0;
-      border-radius: inherit;
+      content:""; position:absolute; inset:0; border-radius: inherit;
       background:
         linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 45%) top/100% 24px no-repeat,
         linear-gradient(0deg, rgba(255,255,255,.03), rgba(255,255,255,0) 55%) bottom/100% 30px no-repeat;
-      mix-blend-mode: screen;
-      opacity:.7;
+      mix-blend-mode: screen; opacity:.7;
     }
     .obsidian-slab::after{
-      content:"";
-      position:absolute;
-      left:-10%; right:-10%; top:-20%; bottom:40%;
+      content:""; position:absolute; left:-10%; right:-10%; top:-20%; bottom:40%;
       border-radius: 40px;
-      background:
-        linear-gradient( 60deg, rgba(255,255,255,0) 35%,
-                               rgba(255,255,255,.04) 50%,
-                               rgba(255,255,255,0) 65%);
-      filter: blur(10px);
-      mix-blend-mode: screen;
-      opacity:.8;
-      transform: translateZ(2px);
+      background: linear-gradient(60deg, rgba(255,255,255,0) 35%, rgba(255,255,255,.04) 50%, rgba(255,255,255,0) 65%);
+      filter: blur(10px); mix-blend-mode: screen; opacity:.8; transform: translateZ(2px);
     }
 
-    /* Pill label — doubled size (and scales with hero) */
     .pill.intro{
       font-weight: 700;
-      font-size: 24px;           /* ~2x old size; scales with hero */
+      font-size: 24px;           /* doubled */
       letter-spacing: .08em;
       padding: .45rem .8rem;
       border-radius: 999px;
@@ -177,24 +139,17 @@
       background: rgba(0,0,0,.6);
     }
 
-    /* Video frame with proportional border; since we scale the hero, this stays perfect on mobile */
     .video-frame{
       aspect-ratio:16/9; width:100%;
       background:
-        radial-gradient(120% 140% at 50% 0%,
-          rgba(255,255,255,.04),
-          rgba(255,255,255,0) 60%),
+        radial-gradient(120% 140% at 50% 0%, rgba(255,255,255,.04), rgba(255,255,255,0) 60%),
         var(--obsidian-1);
-      border-radius: 14px;
-      overflow: hidden;
+      border-radius: 14px; overflow: hidden;
       border: 2px solid var(--obsidian-stroke);
       box-shadow:
         inset 0 2px 10px rgba(0,0,0,.9),
         0 16px 44px rgba(0,0,0,.65);
-      position:relative;
-      z-index:2;
-      transform: translateZ(0);
-      will-change: transform;
+      position:relative; z-index:2; transform: translateZ(0); will-change: transform;
     }
 
     .play{
@@ -206,26 +161,18 @@
     .play-dot{
       width: 56px; height: 56px; border-radius: 9999px;
       display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(circle at 30% 30%,
-                    rgba(255,255,255,.96),
-                    rgba(255,255,255,.86));
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.96), rgba(255,255,255,.86));
       color:#000; font-size: 20px; font-weight: 800;
-      box-shadow:
-        0 10px 22px rgba(0,0,0,.55),
-        inset 0 1px 0 rgba(255,255,255,.65);
+      box-shadow: 0 10px 22px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.65);
     }
     .play-label{ font-size: 13px; text-shadow: 0 1px 0 rgba(0,0,0,.6) }
 
-    /* ---- MODALS: solid, opaque, black ---- */
+    /* ---- MODALS ---- */
     .sheet{ position:fixed; inset:0; z-index:1000; }
     .sheet-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.65); }
     .sheet-card{
-      position:relative; z-index:1;
-      margin: 8vh auto 0 auto; max-width:560px; border-radius:16px;
-      padding:20px;
-      background:#000 !important;
-      border:1px solid #222 !important;
-      box-shadow:0 30px 80px rgba(0,0,0,.8);
+      position:relative; z-index:1; margin:8vh auto 0 auto; max-width:560px; border-radius:16px;
+      padding:20px; background:#000 !important; border:1px solid #222 !important; box-shadow:0 30px 80px rgba(0,0,0,.8);
     }
     .sheet h3{ margin:0; font-size:22px }
     .sheet .divider{ height:1px; background:rgba(255,255,255,.14); margin:12px 0 6px }
@@ -240,8 +187,7 @@
     .input:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35) }
     .toggle-eye{
       position:absolute; right:8px; top:32px;
-      border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px;
-      z-index:2;
+      border:0; background:transparent; color:#333; cursor:pointer; font-size:13px; padding:6px 8px; z-index:2;
     }
     .row-two{ display:flex; gap:10px; flex-wrap:wrap }
     .row-two .btn{ flex:1 }
@@ -625,7 +571,7 @@
       setAuthUI(session);
     }
 
-    // Close handlers for all modals
+    // Close handlers
     document.addEventListener('click', (e)=>{
       if(e.target.matches('#loginSheet [data-close]'))  closeSheet(loginSheet);
       if(e.target.matches('#signupSheet [data-close]')) closeSheet(signupSheet);
@@ -879,7 +825,7 @@
       }
     });
 
-    // ===== 3D tilt/parallax (tasteful, disabled for reduced-motion) =====
+    // ===== 3D tilt/parallax (reduced-motion aware) =====
     (function(){
       const card   = document.getElementById('videoCard');
       const slab   = document.getElementById('obsidianSlab');
@@ -899,37 +845,25 @@
         const max = 6;
         ry = (x - 0.5) * max;
         rx = (0.5 - y) * (max*0.6);
-
-        if(raf===null){
-          raf = requestAnimationFrame(apply);
-        }
+        if(raf===null){ raf = requestAnimationFrame(apply); }
       }
-      function onLeave(){
-        rx=0; ry=0;
-        if(raf===null) raf = requestAnimationFrame(apply);
-      }
-      function lerp(a,b,t){ return a + (b-a)*t; }
+      function onLeave(){ rx=0; ry=0; if(raf===null) raf = requestAnimationFrame(apply); }
+      const lerp=(a,b,t)=> a+(b-a)*t;
 
       function apply(){
         prx = lerp(prx, rx, 0.12);
         pry = lerp(pry, ry, 0.12);
-
         frame.style.transform = `translateZ(0px) rotateX(${prx}deg) rotateY(${pry}deg)`;
         slab.style.transform  = `translateZ(-18px) rotateX(${prx*0.6}deg) rotateY(${pry*0.6}deg)`;
         card.style.transform  = `rotateX(${prx*0.15}deg) rotateY(${pry*0.15}deg)`;
-
-        if(Math.abs(prx-rx) > 0.01 || Math.abs(pry-ry) > 0.01){
-          raf = requestAnimationFrame(apply);
-        }else{
-          raf = null;
-        }
+        if(Math.abs(prx-rx)>0.01 || Math.abs(pry-ry)>0.01){ raf = requestAnimationFrame(apply); } else { raf = null; }
       }
 
       card.addEventListener('pointermove', onMove);
       card.addEventListener('pointerleave', onLeave);
     })();
 
-    // ===== Desktop-locked hero scaling script (fit-to-width, no cutoff) =====
+    // ===== Fit-to-container hero scaling (no cutoff) =====
     (function(){
       const BASE = 980; // must match .hero-scale width
       const shell = document.querySelector('.hero-shell');
@@ -937,24 +871,26 @@
       if(!shell || !scaleEl) return;
 
       function fitHeroScale(){
-        const vw = Math.min(window.innerWidth, document.documentElement.clientWidth);
-
-        // dynamic gutter so it never kisses edges on tiny phones
-        const gutter = Math.max(12, Math.min(32, Math.round(vw * 0.06)));
-
-        // compute the scale that fits; no artificial floor that causes clipping
-        let s = (vw - gutter) / BASE;
-        if (!Number.isFinite(s) || s <= 0) s = 1;
-        s = Math.min(1, s);             // never up-scale, only down-scale to fit
-
+        // Use the ACTUAL container width, not the viewport
+        const cw = shell.clientWidth || shell.getBoundingClientRect().width || window.innerWidth;
+        let s = cw / BASE;                 // scale that fits the container
+        if(!Number.isFinite(s) || s <= 0) s = 1;
+        s = Math.min(1, s);                // never upscale (keeps desktop crisp)
         scaleEl.style.transform = `scale(${s})`;
-
-        // Set shell height to the *visual* height so flow below is correct
         shell.style.height = (scaleEl.offsetHeight * s) + 'px';
       }
 
+      // Recalculate on size + font load (fonts can change intrinsic width/height)
       window.addEventListener('load', fitHeroScale, { once: true });
       window.addEventListener('resize', fitHeroScale);
+
+      // If browser supports it, react to container width changes precisely
+      if('ResizeObserver' in window){
+        const ro = new ResizeObserver(fitHeroScale);
+        ro.observe(shell);
+      }
+      // Try again after fonts settle
+      if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitHeroScale); }
     })();
 
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
