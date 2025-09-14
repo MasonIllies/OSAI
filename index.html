@@ -22,8 +22,7 @@
 
   <style>
     /* =======================
-       OBSIDIAN VIDEO CARD
-       (clean rewrite: no glow rim)
+       OBSIDIAN VIDEO CARD + COLOR SPLASH
        ======================= */
 
     :root{
@@ -35,7 +34,6 @@
       --obsidian-whisper: rgba(255,255,255,.03);
     }
 
-    /* Elegant glass for video card — obsidian */
     .card.video{
       position: relative;
       border-radius: 16px;
@@ -52,7 +50,7 @@
         inset 0 -1px 0 rgba(0,0,0,.85);
       overflow: hidden;
     }
-    /* remove decorative rim entirely; keep a subtle top glare only */
+    /* no rim glow */
     .card.video::before{ content:none; }
     .card.video::after{
       content:"";
@@ -61,6 +59,27 @@
       filter: blur(.3px);
       pointer-events:none;
       opacity:.7;
+    }
+
+    /* ==== Color Splash Layer (restored, sits BEHIND the frame) ==== */
+    .card.video .splash{
+      position:absolute; inset:-20%;
+      pointer-events:none;
+      z-index:0;                 /* behind frame */
+      mix-blend-mode:screen;     /* gentle add, respects black */
+      opacity:.26;               /* tasteful by default */
+      filter: blur(60px) saturate(140%);
+      /* defaults, can be overridden via style vars set by JS */
+      --s1:#7b5cff; --s2:#00ffd1; --s3:#ff5e7e;
+      background:
+        radial-gradient(50% 40% at 20% 20%, var(--s1), transparent 65%),
+        radial-gradient(60% 50% at 80% 30%, var(--s2), transparent 70%),
+        radial-gradient(70% 60% at 50% 100%, var(--s3), transparent 70%);
+      animation: splash-drift 16s ease-in-out infinite alternate;
+    }
+    @keyframes splash-drift{
+      0%   { transform: translate3d(-1%, -1%, 0) rotate(0.5deg) scale(1.02); opacity:.24; }
+      100% { transform: translate3d(1%, 1%, 0) rotate(-0.5deg) scale(1.04); opacity:.30; }
     }
 
     /* Video */
@@ -83,6 +102,7 @@
         inset 0 2px 10px rgba(0,0,0,.9),
         0 16px 44px rgba(0,0,0,.65);
       position:relative;
+      z-index:1; /* above splash */
     }
     .play{
       position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -148,7 +168,7 @@
   </style>
 </head>
 
-<!-- ADDITIVE: Checkout bootstrap -->
+<!-- Checkout bootstrap -->
 <script type="module">
   const CHECKOUT_PRICE_ID = "price_1S6eI9J0uj5iBUehTf0MCJyr";
   const SUCCESS_URL = `https://www.osai.llc/?success=1`;
@@ -226,9 +246,14 @@
       <p class="tiny-note">Welcome to OSAI. Nice to meet you.</p>
       <p class="ps">p.s. Fuck you Google.</p>
 
-      <!-- Video card -->
-      <div class="card video">
+      <!-- Video card with color splash -->
+      <div class="card video" id="videoCard" data-splash="#7b5cff,#00ffd1,#ff5e7e">
         <span class="pill intro">INTRODUCTION VIDEO</span>
+
+        <!-- color splash (behind) -->
+        <div class="splash" id="videoSplash" aria-hidden="true"></div>
+
+        <!-- frame (above splash) -->
         <div class="video-frame" id="videoFrame">
           <button id="playBtn" class="play" aria-label="Play introduction video"
             data-video="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
@@ -291,7 +316,6 @@
           <button id="loginBtn" class="btn primary" type="submit">Login</button>
         </div>
         <p id="loginMsg" class="error-line"></p>
-        <!-- Forgot password trigger -->
         <p class="muted-link" id="forgotLink">Forgot password?</p>
         <p class="muted-link" id="toSignup">Need an account? Create one</p>
       </form>
@@ -442,6 +466,21 @@
       }
       btn.addEventListener("click", inject);
       btn.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inject(); }});
+    })();
+
+    // ===== Color Splash init (reads data-splash from the card) =====
+    (function(){
+      const splash = document.getElementById('videoSplash');
+      const card   = document.getElementById('videoCard');
+      if(!splash || !card) return;
+      const raw = (card.getAttribute('data-splash') || '').trim();
+      const cols = raw.split(',').map(s=>s.trim()).filter(Boolean);
+      const vars = ['--s1','--s2','--s3'];
+      cols.forEach((c,i)=> splash.style.setProperty(vars[i%vars.length], c));
+      // if only 1–2 colors provided, cycle them
+      if(cols.length && cols.length < 3){
+        for(let i=cols.length;i<3;i++) splash.style.setProperty(vars[i], cols[i%cols.length]);
+      }
     })();
 
     // Email suggestions
@@ -712,7 +751,7 @@
         return;
       }
 
-      // 3) Proceed to Stripe hosted Checkout link (kept fallback)
+      // 3) Fallback redirect (kept)
       payBtn.textContent = "Redirecting…";
       window.location.href = STRIPE_LINK;
     });
@@ -730,7 +769,6 @@
       setTimeout(()=> resetPass?.focus(), 0);
     }
 
-    // Auto-open reset sheet when Supabase returns after email click
     supabase.auth.onAuthStateChange(async (event, session)=>{
       setAuthUI(session);
       if(event === "PASSWORD_RECOVERY"){
@@ -738,7 +776,6 @@
       }
     });
 
-    // Also handle direct URL with #type=recovery
     (function checkHashForRecovery(){
       const hash = window.location.hash || "";
       if(hash.includes("type=recovery")) showResetSheet();
@@ -763,7 +800,6 @@
       }
     });
 
-    // Initial auth UI + react to changes
     supabase.auth.onAuthStateChange((_event, session)=> setAuthUI(session));
     refreshSessionUI();
   </script>
