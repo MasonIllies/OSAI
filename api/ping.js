@@ -1,4 +1,3 @@
-{
-  "version": 2,
-  "functions": { "api/*.js": { "runtime": "nodejs20.x" } }
+export default function handler(req, res) {
+  res.status(200).json({ ok: true, node: process.version });
 }
