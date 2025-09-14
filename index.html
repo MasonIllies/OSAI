@@ -36,7 +36,6 @@
       --obsidian-whisper: rgba(255,255,255,.03);
     }
 
-    /* General hero container stays normal width; the hero content itself is inside a 980px "canvas" we scale */
     .container.hero{
       margin: 0 auto;
       padding-left: 4vw;
@@ -44,14 +43,14 @@
     }
 
     /* === Desktop-locked hero that scales down on small screens === */
-    /* Keep your manual <br> line breaks only. No auto wrap between words. */
+    /* Exactly two lines using ONE manual <br>; no other wrapping allowed */
     .hero-title{
-      white-space: nowrap;       /* only break where you insert <br> */
+      white-space: nowrap;       /* only break at <br> */
       display: inline-block;
       line-height: 1.05;
       letter-spacing: .002em;
-      font-size: 56px;           /* desktop base; will scale as a unit below */
-      max-width: none;           /* avoid any previous max-width forcing wraps */
+      font-size: 56px;           /* desktop base; will scale as a unit */
+      max-width: none;
     }
 
     /* Shell centers and hides overflow created by transform-scaling */
@@ -69,7 +68,6 @@
       will-change: transform;
     }
 
-    /* Optional lede tweaks; will scale anyway */
     .lede{
       font-size: 18px;
       line-height: 1.35;
@@ -253,7 +251,6 @@
     .btn.primary{ background:#fff; color:#000; border-radius:12px; padding:.9rem 1.1rem; border:1px solid rgba(255,255,255,.22) }
     .btn.primary[disabled]{ opacity:.5; cursor:not-allowed }
 
-    /* Email dropdown */
     .email-wrap{ position:relative; display:inline-block; width:min(420px,100%) }
     .email-dd{ position:absolute; left:0; right:0; top:calc(100% + 6px); background:#0b0d10; border:1px solid rgba(255,255,255,.18); border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.55); padding:6px; z-index:30; display:none; }
     .email-dd.open{ display:block }
@@ -329,10 +326,8 @@
       <div class="hero-shell">
         <div class="hero-scale" id="heroScale">
           <h1 class="hero-title">
-            Not just another shit app built<br />
-            to farm your data and trick<br />
-            you into forgetting your<br />
-            subscription.
+            Not just another shit app built to farm your data<br />
+            and trick you into forgetting your subscription.
           </h1>
 
           <p class="lede">
@@ -934,7 +929,7 @@
       card.addEventListener('pointerleave', onLeave);
     })();
 
-    // ===== Desktop-locked hero scaling script =====
+    // ===== Desktop-locked hero scaling script (fit-to-width, no cutoff) =====
     (function(){
       const BASE = 980; // must match .hero-scale width
       const shell = document.querySelector('.hero-shell');
@@ -943,9 +938,18 @@
 
       function fitHeroScale(){
         const vw = Math.min(window.innerWidth, document.documentElement.clientWidth);
-        const gutter = 24; // px — keeps a small padding from edges
-        const s = Math.max(0.6, Math.min(1, (vw - gutter) / BASE)); // clamp 0.6..1
+
+        // dynamic gutter so it never kisses edges on tiny phones
+        const gutter = Math.max(12, Math.min(32, Math.round(vw * 0.06)));
+
+        // compute the scale that fits; no artificial floor that causes clipping
+        let s = (vw - gutter) / BASE;
+        if (!Number.isFinite(s) || s <= 0) s = 1;
+        s = Math.min(1, s);             // never up-scale, only down-scale to fit
+
         scaleEl.style.transform = `scale(${s})`;
+
+        // Set shell height to the *visual* height so flow below is correct
         shell.style.height = (scaleEl.offsetHeight * s) + 'px';
       }
 
