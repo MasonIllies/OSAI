@@ -1,11 +1,12 @@
 {
+  "version": 2,
   "functions": {
-    "api/stripe-webhook.js": { "runtime": "nodejs20.x" },
-    "api/create-checkout-session.js": { "runtime": "nodejs20.x" }
+    "api/*.js": {
+      "runtime": "nodejs20.x"
+    }
   },
   "routes": [
     { "src": "/api/stripe-webhook", "dest": "/api/stripe-webhook.js" },
     { "src": "/api/create-checkout-session", "dest": "/api/create-checkout-session.js" }
   ]
 }
- 
